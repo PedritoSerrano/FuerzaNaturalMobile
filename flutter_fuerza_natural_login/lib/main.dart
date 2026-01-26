@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_fuerza_natural_login/ui/home_page_view.dart';
+import 'package:flutter_fuerza_natural_login/ui/login_page_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const HomePageView(),
+      home: const LoginPageView(),
     );
   }
 }
