@@ -3,16 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_fuerza_natural_login/core/models/finca_model.dart';
 import 'package:flutter_fuerza_natural_login/features/bloc/explorar/explorar_bloc.dart';
 import 'package:flutter_fuerza_natural_login/features/ui/detalle_finca_page.dart';
+import 'package:flutter_fuerza_natural_login/features/ui/widgets/app_error_widget.dart';
 
 class ExplorarPage extends StatelessWidget {
   const ExplorarPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => ExplorarBloc()..add(const ExplorarLoadRequested()),
-      child: const _ExplorarView(),
-    );
+    // ExplorarBloc is provided by MainShell
+    return const _ExplorarView();
   }
 }
 
@@ -38,22 +37,36 @@ class _ExplorarViewState extends State<_ExplorarView> {
       backgroundColor: const Color(0xFFF5F5F5),
       body: BlocBuilder<ExplorarBloc, ExplorarState>(
         builder: (context, state) {
-          return CustomScrollView(
-            slivers: [
-              _buildHeader(context),
-              if (state is ExplorarLoading)
-                const SliverFillRemaining(
-                  child: Center(
-                    child: CircularProgressIndicator(color: Color(0xFF2E7D32)),
+          return RefreshIndicator(
+            color: const Color(0xFF1e5a3a),
+            onRefresh: () async {
+              context.read<ExplorarBloc>().add(const ExplorarLoadRequested());
+              // Wait until no longer loading
+              await context.read<ExplorarBloc>().stream.firstWhere(
+                    (s) => s is! ExplorarLoading,
+                  );
+            },
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                _buildHeader(context),
+                if (state is ExplorarLoading)
+                  const SliverFillRemaining(
+                    child: Center(
+                      child: CircularProgressIndicator(color: Color(0xFF1e5a3a)),
+                    ),
+                  )
+                else if (state is ExplorarLoaded)
+                  ..._buildContent(context, state)
+                else if (state is ExplorarError)
+                  SliverAppError(
+                    mensaje: state.mensaje,
+                    onRetry: () => context
+                        .read<ExplorarBloc>()
+                        .add(const ExplorarLoadRequested()),
                   ),
-                )
-              else if (state is ExplorarLoaded)
-                ..._buildContent(context, state)
-              else if (state is ExplorarError)
-                SliverFillRemaining(
-                  child: Center(child: Text(state.mensaje)),
-                ),
-            ],
+              ],
+            ),
           );
         },
       ),
@@ -63,7 +76,7 @@ class _ExplorarViewState extends State<_ExplorarView> {
   Widget _buildHeader(BuildContext context) {
     return SliverToBoxAdapter(
       child: Container(
-        color: const Color(0xFF2E7D32),
+        color: const Color(0xFF1e5a3a),
         padding: EdgeInsets.only(
           top: MediaQuery.of(context).padding.top + 16,
           left: 20,
@@ -120,78 +133,72 @@ class _ExplorarViewState extends State<_ExplorarView> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.all(6),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2E7D32),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.tune, color: Colors.white, size: 20),
+          // Filter button with active badge
+          BlocBuilder<ExplorarBloc, ExplorarState>(
+            builder: (context, state) {
+              final hayFiltros =
+                  state is ExplorarLoaded && state.hayFiltros;
+              return GestureDetector(
+                onTap: () => _showFiltros(context, state),
+                child: Container(
+                  margin: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: hayFiltros
+                        ? const Color(0xFFE8F5E9)
+                        : const Color(0xFF1e5a3a),
+                    borderRadius: BorderRadius.circular(8),
+                    border: hayFiltros
+                        ? Border.all(color: const Color(0xFF1e5a3a), width: 2)
+                        : null,
+                  ),
+                  child: Icon(
+                    Icons.tune,
+                    color: hayFiltros
+                        ? const Color(0xFF1e5a3a)
+                        : Colors.white,
+                    size: 20,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  List<Widget> _buildContent(BuildContext context, ExplorarLoaded state) {
-    if (state.enBusqueda) {
-      return [
-        SliverPadding(
-          padding: const EdgeInsets.all(16),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (_, i) => _FincaCardVertical(finca: state.resultadosBusqueda[i]),
-              childCount: state.resultadosBusqueda.length,
-            ),
-          ),
+  void _showFiltros(BuildContext context, ExplorarState state) {
+    final loaded = state is ExplorarLoaded ? state : null;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => BlocProvider.value(
+        value: context.read<ExplorarBloc>(),
+        child: _FiltrosSheet(
+          initialProvincia: loaded?.filtroProvincias ?? '',
+          initialMaxPrecio: loaded?.filtroMaxPrecio ?? 2000,
+          initialMinSuperficie: loaded?.filtroMinSuperficie ?? 0,
         ),
-      ];
-    }
+      ),
+    );
+  }
+
+  List<Widget> _buildContent(BuildContext context, ExplorarLoaded state) {
+    final fincas = state.mostradas;
 
     return [
-      // Destacadas
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
           child: Row(
-            children: const [
-              Icon(Icons.star, color: Color(0xFFFFA000), size: 22),
-              SizedBox(width: 8),
-              Text(
-                'Destacadas',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        sliver: SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (_, i) => _FincaCardVertical(
-              finca: state.destacadas[i],
-              destacada: true,
-            ),
-            childCount: state.destacadas.length,
-          ),
-        ),
-      ),
-
-      // Todas las fincas
-      SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Todas las fincas',
+                'Fincas disponibles',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -199,22 +206,45 @@ class _ExplorarViewState extends State<_ExplorarView> {
                 ),
               ),
               Text(
-                '${state.todas.length} disponibles',
-                style: const TextStyle(color: Color(0xFF2E7D32), fontSize: 13),
+                '${fincas.length} fincas',
+                style: const TextStyle(color: Color(0xFF1e5a3a), fontSize: 13),
               ),
             ],
           ),
         ),
       ),
-      SliverPadding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-        sliver: SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (_, i) => _FincaCardVertical(finca: state.todas[i]),
-            childCount: state.todas.length,
+      if (fincas.isEmpty)
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.search_off, color: Colors.grey.shade300, size: 56),
+                const SizedBox(height: 12),
+                Text(
+                  state.enBusqueda
+                      ? state.hayFiltros && state.searchQuery.isEmpty
+                          ? 'No hay fincas que coincidan con los filtros'
+                          : 'No hay fincas que coincidan con la búsqueda'
+                      : 'No hay fincas disponibles',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        )
+      else
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (_, i) => _FincaCardVertical(finca: fincas[i]),
+              childCount: fincas.length,
+            ),
           ),
         ),
-      ),
     ];
   }
 }
@@ -224,9 +254,8 @@ class _ExplorarViewState extends State<_ExplorarView> {
 // ─────────────────────────────────────────────────────────────
 class _FincaCardVertical extends StatelessWidget {
   final FincaModel finca;
-  final bool destacada;
 
-  const _FincaCardVertical({required this.finca, this.destacada = false});
+  const _FincaCardVertical({required this.finca});
 
   static const List<Color> _imgColors = [
     Color(0xFF5D8A5E),
@@ -239,6 +268,24 @@ class _FincaCardVertical extends StatelessWidget {
     final idx = int.tryParse(finca.id.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
     return _imgColors[idx % _imgColors.length];
   }
+
+  static Widget _imgPlaceholder(Color color) => Container(
+        color: color,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.landscape, size: 52,
+                  color: Colors.white.withValues(alpha: 0.4)),
+              const SizedBox(height: 4),
+              Text('Sin foto',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.6))),
+            ],
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +303,7 @@ class _FincaCardVertical extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -271,17 +318,23 @@ class _FincaCardVertical extends StatelessWidget {
                   const BorderRadius.vertical(top: Radius.circular(16)),
               child: Stack(
                 children: [
-                  Container(
+                  SizedBox(
                     height: 180,
                     width: double.infinity,
-                    color: _imgColor,
-                    child: Center(
-                      child: Icon(Icons.landscape,
-                          size: 60,
-                          color: Colors.white.withOpacity(0.3)),
-                    ),
+                    child: finca.imageUrl != null && finca.imageUrl!.isNotEmpty
+                        ? Image.network(
+                            finca.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                _imgPlaceholder(_imgColor),
+                            loadingBuilder: (_, child, progress) =>
+                                progress == null
+                                    ? child
+                                    : _imgPlaceholder(_imgColor),
+                          )
+                        : _imgPlaceholder(_imgColor),
                   ),
-                  if (destacada || finca.destacada)
+                  if (finca.destacada)
                     Positioned(
                       top: 12,
                       right: 12,
@@ -320,7 +373,7 @@ class _FincaCardVertical extends StatelessWidget {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withOpacity(0.7),
+                            Colors.black.withValues(alpha: 0.7),
                           ],
                         ),
                       ),
@@ -369,7 +422,7 @@ class _FincaCardVertical extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2E7D32),
+                          color: const Color(0xFF1e5a3a),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -401,16 +454,10 @@ class _FincaCardVertical extends StatelessWidget {
                               text:
                                   '€${finca.precioDia.toStringAsFixed(0)}',
                               style: const TextStyle(
-                                color: Color(0xFF2E7D32),
+                                color: Color(0xFF1e5a3a),
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
-                            ),
-                            const TextSpan(
-                              text: '\npor día',
-                              style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 11),
                             ),
                           ],
                         ),
@@ -469,14 +516,14 @@ class _FincaCardVertical extends StatelessWidget {
                           Text(
                             'Ver detalles',
                             style: TextStyle(
-                              color: Color(0xFF2E7D32),
+                              color: Color(0xFF1e5a3a),
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           SizedBox(width: 4),
                           Icon(Icons.chevron_right,
-                              color: Color(0xFF2E7D32), size: 18),
+                              color: Color(0xFF1e5a3a), size: 18),
                         ],
                       ),
                     ),
@@ -507,9 +554,212 @@ class _EspecieChip extends StatelessWidget {
       child: Text(
         label,
         style: const TextStyle(
-          color: Color(0xFF2E7D32),
+          color: Color(0xFF1e5a3a),
           fontSize: 11,
           fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Filtros bottom sheet ──────────────────────────────────────────────────
+class _FiltrosSheet extends StatefulWidget {
+  final String initialProvincia;
+  final double initialMaxPrecio;
+  final double initialMinSuperficie;
+
+  const _FiltrosSheet({
+    required this.initialProvincia,
+    required this.initialMaxPrecio,
+    required this.initialMinSuperficie,
+  });
+
+  @override
+  State<_FiltrosSheet> createState() => _FiltrosSheetState();
+}
+
+class _FiltrosSheetState extends State<_FiltrosSheet> {
+  late final TextEditingController _provinciaCtrl;
+  late double _maxPrecio;
+  late double _minSuperficie;
+
+  static const double _maxPrecioLimit = 2000;
+  static const double _maxSuperficieLimit = 1500;
+
+  @override
+  void initState() {
+    super.initState();
+    _provinciaCtrl = TextEditingController(text: widget.initialProvincia);
+    _maxPrecio = widget.initialMaxPrecio.clamp(0, _maxPrecioLimit).toDouble();
+    _minSuperficie =
+        widget.initialMinSuperficie.clamp(0, _maxSuperficieLimit).toDouble();
+  }
+
+  @override
+  void dispose() {
+    _provinciaCtrl.dispose();
+    super.dispose();
+  }
+
+  void _aplicar() {
+    final p = _provinciaCtrl.text.trim();
+    context.read<ExplorarBloc>().add(
+          ExplorarFiltrosChanged(
+            provincia: p.isEmpty ? null : p,
+            maxPrecio: _maxPrecio >= _maxPrecioLimit ? null : _maxPrecio,
+            minSuperficie: _minSuperficie <= 0 ? null : _minSuperficie,
+          ),
+        );
+    Navigator.pop(context);
+  }
+
+  void _limpiar() {
+    context.read<ExplorarBloc>().add(const ExplorarFiltrosChanged());
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Filtros',
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold)),
+                  TextButton(
+                    onPressed: _limpiar,
+                    child: const Text('Limpiar',
+                        style: TextStyle(color: Color(0xFF1e5a3a))),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Provincia
+              const Text('Provincia',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 14)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _provinciaCtrl,
+                decoration: InputDecoration(
+                  hintText: 'Ej: Sevilla, Córdoba...',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: const Icon(Icons.location_on_outlined,
+                      color: Color(0xFF1e5a3a)),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Color(0xFF1e5a3a)),
+                  ),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Precio máximo
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Precio máximo',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 14)),
+                  Text(
+                    _maxPrecio >= _maxPrecioLimit
+                        ? 'Sin límite'
+                        : '€${_maxPrecio.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                        color: Color(0xFF1e5a3a),
+                        fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              Slider(
+                value: _maxPrecio,
+                min: 0,
+                max: _maxPrecioLimit,
+                divisions: 40,
+                activeColor: const Color(0xFF1e5a3a),
+                inactiveColor: const Color(0xFFB9F6CA),
+                onChanged: (v) => setState(() => _maxPrecio = v),
+              ),
+              const SizedBox(height: 12),
+
+              // Superficie mínima
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Superficie mínima',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 14)),
+                  Text(
+                    _minSuperficie <= 0
+                        ? 'Sin mínimo'
+                        : '${_minSuperficie.toStringAsFixed(0)} ha',
+                    style: const TextStyle(
+                        color: Color(0xFF1e5a3a),
+                        fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              Slider(
+                value: _minSuperficie,
+                min: 0,
+                max: _maxSuperficieLimit,
+                divisions: 50,
+                activeColor: const Color(0xFF1e5a3a),
+                inactiveColor: const Color(0xFFB9F6CA),
+                onChanged: (v) => setState(() => _minSuperficie = v),
+              ),
+              const SizedBox(height: 20),
+
+              // Apply button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _aplicar,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1e5a3a),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Aplicar filtros',
+                      style: TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

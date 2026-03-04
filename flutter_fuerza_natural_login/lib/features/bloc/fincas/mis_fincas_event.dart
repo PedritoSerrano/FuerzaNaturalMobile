@@ -27,3 +27,14 @@ class MisFincasAgregarFinca extends MisFincasEvent {
   final FincaModel finca;
   const MisFincasAgregarFinca(this.finca);
 }
+
+class MisFincasActualizarFotos extends MisFincasEvent {
+  final String fincaId;
+  final List<String> nuevasFotos;
+  const MisFincasActualizarFotos(this.fincaId, this.nuevasFotos);
+}
+
+class MisFincasInactivarFinca extends MisFincasEvent {
+  final String fincaId;
+  const MisFincasInactivarFinca(this.fincaId);
+}

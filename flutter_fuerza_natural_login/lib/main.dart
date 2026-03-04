@@ -3,10 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_fuerza_natural_login/features/bloc/auth/auth_bloc.dart';
 import 'package:flutter_fuerza_natural_login/features/bloc/navigation/navigation_bloc.dart';
-import 'package:flutter_fuerza_natural_login/features/bloc/explorar/explorar_bloc.dart';
-import 'package:flutter_fuerza_natural_login/features/bloc/perfil/perfil_bloc.dart';
-import 'package:flutter_fuerza_natural_login/features/bloc/fincas/mis_fincas_bloc.dart';
-import 'package:flutter_fuerza_natural_login/features/bloc/reservas/mis_reservas_bloc.dart';
 import 'package:flutter_fuerza_natural_login/features/ui/login_page.dart';
 import 'package:flutter_fuerza_natural_login/features/ui/main_shell.dart';
 
@@ -29,11 +25,26 @@ class FuerzaNaturalApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF2E7D32),
-            primary: const Color(0xFF2E7D32),
+            seedColor: const Color(0xFF1e5a3a),
+            primary: const Color(0xFF1e5a3a),
+          ).copyWith(
+            // Override M3 auto-generated green-tinted neutrals to plain grey
+            outline: const Color(0xFFBDBDBD),
+            outlineVariant: const Color(0xFFE0E0E0),
+            surfaceContainerHighest: const Color(0xFFF0F0F0),
           ),
           useMaterial3: true,
           fontFamily: 'Roboto',
+          // Explicitly neutralise input borders so they don't inherit green
+          inputDecorationTheme: const InputDecorationTheme(
+            border: OutlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+            ),
+          ),
+          dividerTheme: const DividerThemeData(color: Color(0xFFE0E0E0)),
         ),
         home: const _AppRouter(),
       ),
@@ -77,26 +88,8 @@ class _AppRouter extends StatelessWidget {
           }
 
           if (state is AuthAuthenticated) {
-            return MultiBlocProvider(
-              providers: [
-                BlocProvider(create: (_) => NavigationBloc()),
-                BlocProvider(
-                  create: (_) =>
-                      ExplorarBloc()..add(const ExplorarLoadRequested()),
-                ),
-                BlocProvider(
-                  create: (_) =>
-                      PerfilBloc()..add(const PerfilLoadRequested()),
-                ),
-                BlocProvider(
-                  create: (_) =>
-                      MisFincasBloc()..add(const MisFincasLoadRequested()),
-                ),
-                BlocProvider(
-                  create: (_) =>
-                      MisReservasBloc()..add(const MisReservasLoadRequested()),
-                ),
-              ],
+            return BlocProvider(
+              create: (_) => NavigationBloc(),
               child: const MainShell(),
             );
           }

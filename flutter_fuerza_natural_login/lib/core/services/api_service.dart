@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_fuerza_natural_login/core/config/api_config.dart';
 
@@ -28,9 +29,20 @@ class ApiService {
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
+          debugPrint('[ApiService] --> ${options.method} ${options.uri}');
           return handler.next(options);
         },
+        onResponse: (response, handler) {
+          debugPrint('[ApiService] <-- ${response.statusCode} ${response.requestOptions.uri}');
+          return handler.next(response);
+        },
         onError: (DioException error, handler) {
+          debugPrint(
+            '[ApiService] ERROR ${error.response?.statusCode ?? error.type.name} '
+            '${error.requestOptions.uri}\n'
+            '  message: ${error.message}\n'
+            '  data: ${error.response?.data}',
+          );
           return handler.next(error);
         },
       ),
@@ -53,6 +65,14 @@ class ApiService {
 
   Future<Response> post(String path, {dynamic data}) =>
       _dio.post(path, data: data);
+
+  Future<Response> postFormData(String path, {required FormData data}) =>
+      _dio.post(path, data: data,
+          options: Options(contentType: 'multipart/form-data'));
+
+  Future<Response> patchFormData(String path, {required FormData data}) =>
+      _dio.patch(path, data: data,
+          options: Options(contentType: 'multipart/form-data'));
 
   Future<Response> put(String path, {dynamic data}) =>
       _dio.put(path, data: data);

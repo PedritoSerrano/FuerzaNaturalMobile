@@ -55,6 +55,46 @@ class AuthRepository {
     }
   }
 
+  /// PATCH /api/mi-perfil → actualiza nombre, apellidos, telefono, ubicacion
+  Future<UserModel> updateMiPerfil({
+    String? nombre,
+    String? apellidos,
+    String? telefono,
+    String? ubicacion,
+  }) async {
+    try {
+      final body = <String, dynamic>{};
+      if (nombre != null) body['nombre'] = nombre;
+      if (apellidos != null) body['apellidos'] = apellidos;
+      if (telefono != null) body['telefono'] = telefono;
+      if (ubicacion != null) body['ubicacion'] = ubicacion;
+      final response = await _api.patch(ApiConfig.miPerfil, data: body);
+      final data = response.data as Map<String, dynamic>;
+      final userJson = (data['user'] as Map<String, dynamic>?) ?? data;
+      return UserModel.fromJson(userJson);
+    } on DioException catch (e) {
+      throw _parseError(e);
+    }
+  }
+
+  /// POST /api/mis-valoraciones → crea una reseña para una reserva pasada
+  Future<void> crearValoracion({
+    required String idReserva,
+    required int puntuacion,
+    String? comentario,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'id_reserva': idReserva,
+        'puntuacion': puntuacion,
+        if (comentario != null && comentario.isNotEmpty) 'comentario': comentario,
+      };
+      await _api.post(ApiConfig.misValoraciones, data: body);
+    } on DioException catch (e) {
+      throw _parseError(e);
+    }
+  }
+
   Future<bool> isLoggedIn() => _api.hasToken();
 
   Future<void> deleteToken() => _api.deleteToken();

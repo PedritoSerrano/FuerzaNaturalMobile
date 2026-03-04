@@ -16,3 +16,14 @@ class ExplorarSearchChanged extends ExplorarEvent {
 class ExplorarSearchCleared extends ExplorarEvent {
   const ExplorarSearchCleared();
 }
+
+class ExplorarFiltrosChanged extends ExplorarEvent {
+  final String? provincia;
+  final double? maxPrecio;
+  final double? minSuperficie;
+  const ExplorarFiltrosChanged({
+    this.provincia,
+    this.maxPrecio,
+    this.minSuperficie,
+  });
+}

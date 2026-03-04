@@ -55,6 +55,11 @@ class PublicarFincaActualizarNormas extends PublicarFincaEvent {
   const PublicarFincaActualizarNormas(this.normas);
 }
 
+class PublicarFincaActualizarFotos extends PublicarFincaEvent {
+  final List<String> fotos; // local file paths
+  const PublicarFincaActualizarFotos(this.fotos);
+}
+
 class PublicarFincaPublicar extends PublicarFincaEvent {
   const PublicarFincaPublicar();
 }

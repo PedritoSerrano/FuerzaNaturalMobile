@@ -16,6 +16,8 @@ class MisFincasBloc extends Bloc<MisFincasEvent, MisFincasState> {
     on<MisFincasActivarFinca>(_onActivar);
     on<MisFincasEliminarFinca>(_onEliminar);
     on<MisFincasAgregarFinca>(_onAgregar);
+    on<MisFincasActualizarFotos>(_onActualizarFotos);
+    on<MisFincasInactivarFinca>(_onInactivar);
   }
 
   Future<void> _onLoadRequested(
@@ -76,5 +78,36 @@ class MisFincasBloc extends Bloc<MisFincasEvent, MisFincasState> {
     final current = state;
     if (current is! MisFincasLoaded) return;
     emit(MisFincasLoaded([...current.fincas, event.finca]));
+  }
+
+  Future<void> _onActualizarFotos(
+      MisFincasActualizarFotos event, Emitter<MisFincasState> emit) async {
+    try {
+      final updated = await _repo.agregarFotosFinca(event.fincaId, event.nuevasFotos);
+      final current = state;
+      if (current is MisFincasLoaded) {
+        final list = current.fincas
+            .map((f) => f.id == event.fincaId ? updated : f)
+            .toList();
+        emit(MisFincasLoaded(list));
+      }
+    } catch (_) {
+      // silently ignore — photos were saved on the backend
+    }
+  }
+
+  Future<void> _onInactivar(
+      MisFincasInactivarFinca event, Emitter<MisFincasState> emit) async {
+    final current = state;
+    if (current is! MisFincasLoaded) return;
+    final updated = current.fincas
+        .map((f) => f.id == event.fincaId ? f.copyWith(estado: EstadoFinca.inactiva) : f)
+        .toList();
+    emit(MisFincasLoaded(updated));
+    try {
+      await _repo.cambiarEstado(event.fincaId, 'inactiva');
+    } catch (_) {
+      emit(MisFincasLoaded(current.fincas));
+    }
   }
 }

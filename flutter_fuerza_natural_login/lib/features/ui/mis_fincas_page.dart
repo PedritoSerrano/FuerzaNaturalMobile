@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_fuerza_natural_login/core/models/finca_model.dart';
 import 'package:flutter_fuerza_natural_login/features/bloc/fincas/mis_fincas_bloc.dart';
 import 'package:flutter_fuerza_natural_login/features/ui/publicar_finca_page.dart';
+import 'package:flutter_fuerza_natural_login/features/ui/widgets/app_error_widget.dart';
+import 'package:image_picker/image_picker.dart';
 
 class MisFincasPage extends StatelessWidget {
   const MisFincasPage({super.key});
@@ -33,7 +37,7 @@ class _MisFincasView extends StatelessWidget {
                 const SliverFillRemaining(
                   child: Center(
                     child: CircularProgressIndicator(
-                        color: Color(0xFF2E7D32)),
+                        color: Color(0xFF1e5a3a)),
                   ),
                 )
               else if (state is MisFincasLoaded) ...[
@@ -41,8 +45,12 @@ class _MisFincasView extends StatelessWidget {
                 _buildFincasList(context, state),
                 _buildPublicarBtn(context),
               ] else if (state is MisFincasError)
-                SliverFillRemaining(
-                    child: Center(child: Text(state.mensaje))),
+                SliverAppError(
+                  mensaje: state.mensaje,
+                  onRetry: () => context
+                      .read<MisFincasBloc>()
+                      .add(const MisFincasLoadRequested()),
+                ),
             ],
           );
         },
@@ -53,7 +61,7 @@ class _MisFincasView extends StatelessWidget {
   Widget _buildHeader(BuildContext context, MisFincasState state) {
     return SliverToBoxAdapter(
       child: Container(
-        color: const Color(0xFF2E7D32),
+        color: const Color(0xFF1e5a3a),
         padding: EdgeInsets.only(
           top: MediaQuery.of(context).padding.top + 12,
           left: 16,
@@ -67,7 +75,7 @@ class _MisFincasView extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.chevron_left,
@@ -151,7 +159,7 @@ class _MisFincasView extends StatelessWidget {
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2E7D32),
+            backgroundColor: const Color(0xFF1e5a3a),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
@@ -207,6 +215,17 @@ class _MiFincaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activa = finca.estado == EstadoFinca.activa;
+    final inactiva = finca.estado == EstadoFinca.inactiva;
+    final estadoColor = activa
+        ? Colors.green
+        : inactiva
+            ? Colors.red
+            : Colors.grey;
+    final estadoLabel = activa
+        ? 'Activa'
+        : inactiva
+            ? 'Inactiva'
+            : 'Pausada';
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -214,7 +233,7 @@ class _MiFincaCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.07),
+            color: Colors.black.withValues(alpha: 0.07),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -229,15 +248,30 @@ class _MiFincaCard extends StatelessWidget {
                 const BorderRadius.vertical(top: Radius.circular(16)),
             child: Stack(
               children: [
-                Container(
+                SizedBox(
                   height: 140,
                   width: double.infinity,
-                  color: _imgColor,
-                  child: Center(
-                    child: Icon(Icons.landscape,
-                        size: 50,
-                        color: Colors.white.withOpacity(0.3)),
-                  ),
+                  child: finca.imageUrl != null
+                      ? Image.network(
+                          finca.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: _imgColor,
+                            child: Center(
+                              child: Icon(Icons.landscape,
+                                  size: 50,
+                                  color: Colors.white.withValues(alpha: 0.3)),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          color: _imgColor,
+                          child: Center(
+                            child: Icon(Icons.landscape,
+                                size: 50,
+                                color: Colors.white.withValues(alpha: 0.3)),
+                          ),
+                        ),
                 ),
                 // Estado badge
                 Positioned(
@@ -247,8 +281,7 @@ class _MiFincaCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color:
-                          activa ? Colors.green : Colors.grey,
+                      color: estadoColor,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -264,7 +297,7 @@ class _MiFincaCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          activa ? 'Activa' : 'Pausada',
+                          estadoLabel,
                           style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -315,7 +348,7 @@ class _MiFincaCard extends StatelessWidget {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.65),
+                          Colors.black.withValues(alpha: 0.65),
                         ],
                       ),
                     ),
@@ -393,32 +426,46 @@ class _MiFincaCard extends StatelessWidget {
             child: Row(
               children: [
                 _ActionBtn(
-                  icon: activa
-                      ? Icons.pause_circle_outline
-                      : Icons.play_circle_outline,
-                  label: activa ? 'Pausar' : 'Activar',
-                  color: const Color(0xFF2E7D32),
+                  icon: inactiva
+                      ? Icons.play_circle_outline
+                      : Icons.pause_circle_outline,
+                  label: inactiva ? 'Habilitar' : 'Inhabilitar',
+                  color: const Color(0xFF1e5a3a),
                   onTap: () {
                     final bloc = context.read<MisFincasBloc>();
-                    if (activa) {
-                      bloc.add(MisFincasPausarFinca(finca.id));
-                    } else {
+                    if (inactiva) {
                       bloc.add(MisFincasActivarFinca(finca.id));
+                    } else {
+                      bloc.add(MisFincasInactivarFinca(finca.id));
                     }
                   },
                 ),
                 const SizedBox(width: 8),
                 _ActionBtn(
-                  icon: Icons.edit_outlined,
-                  label: 'Editar',
-                  color: const Color(0xFF2E7D32),
-                  onTap: () {},
+                  icon: Icons.photo_library_outlined,
+                  label: 'Fotos',
+                  color: const Color(0xFF1e5a3a),
+                  onTap: () {
+                    final bloc = context.read<MisFincasBloc>();
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      builder: (_) => BlocProvider.value(
+                        value: bloc,
+                        child: _GestionFotosSheet(finca: finca),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(width: 8),
                 _ActionBtn(
                   icon: Icons.visibility_outlined,
                   label: 'Ver',
-                  color: const Color(0xFF2E7D32),
+                  color: const Color(0xFF1e5a3a),
                   onTap: () {},
                 ),
                 const Spacer(),
@@ -501,6 +548,215 @@ class _ActionBtn extends StatelessWidget {
                     color: color,
                     fontSize: 12,
                     fontWeight: FontWeight.w500)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Gestión de fotos sheet ────────────────────────────────────────────────
+class _GestionFotosSheet extends StatefulWidget {
+  final FincaModel finca;
+  const _GestionFotosSheet({required this.finca});
+
+  @override
+  State<_GestionFotosSheet> createState() => _GestionFotosSheetState();
+}
+
+class _GestionFotosSheetState extends State<_GestionFotosSheet> {
+  static final _picker = ImagePicker();
+  final List<String> _nuevasFotos = [];
+  bool _subiendo = false;
+
+  Future<void> _pickImages() async {
+    try {
+      final picked = await _picker.pickMultiImage(imageQuality: 80);
+      if (picked.isEmpty) return;
+      setState(() {
+        for (final x in picked) {
+          if (!_nuevasFotos.contains(x.path)) _nuevasFotos.add(x.path);
+        }
+      });
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo acceder a la galería')),
+        );
+      }
+    }
+  }
+
+  Future<void> _guardar() async {
+    if (_nuevasFotos.isEmpty) return;
+    setState(() => _subiendo = true);
+    context.read<MisFincasBloc>().add(
+          MisFincasActualizarFotos(widget.finca.id, List.from(_nuevasFotos)),
+        );
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final existentes = widget.finca.imagenes;
+    final totalFotos = existentes.length + _nuevasFotos.length;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Row(
+                children: [
+                  const Icon(Icons.photo_library_outlined,
+                      color: Color(0xFF1e5a3a)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Fotos de ${widget.finca.nombre}',
+                      style: const TextStyle(
+                          fontSize: 17, fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (totalFotos == 0)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Column(
+                  children: [
+                    Icon(Icons.photo_camera_back_outlined,
+                        size: 48, color: Colors.grey),
+                    SizedBox(height: 8),
+                    Text('Esta finca no tiene fotos todavía',
+                        style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              )
+            else
+              SizedBox(
+                height: 130,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
+                  itemCount: totalFotos,
+                  itemBuilder: (_, i) {
+                    final isExistente = i < existentes.length;
+                    return Stack(
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.only(right: 10),
+                          width: 100,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: isExistente
+                                ? Image.network(
+                                    existentes[i],
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        Container(color: Colors.grey[200]),
+                                  )
+                                : Image.file(
+                                    File(_nuevasFotos[i - existentes.length]),
+                                    fit: BoxFit.cover,
+                                  ),
+                          ),
+                        ),
+                        if (!isExistente)
+                          Positioned(
+                            top: 4,
+                            right: 14,
+                            child: GestureDetector(
+                              onTap: () => setState(() {
+                                _nuevasFotos
+                                    .removeAt(i - existentes.length);
+                              }),
+                              child: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close,
+                                    size: 13, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _subiendo ? null : _pickImages,
+                      icon: const Icon(Icons.add_photo_alternate_outlined),
+                      label: const Text('Añadir fotos'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF1e5a3a),
+                        side: const BorderSide(color: Color(0xFF1e5a3a)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                  if (_nuevasFotos.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _subiendo ? null : _guardar,
+                        icon: _subiendo
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.cloud_upload_outlined),
+                        label: Text(_subiendo ? 'Subiendo…' : 'Guardar'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1e5a3a),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),

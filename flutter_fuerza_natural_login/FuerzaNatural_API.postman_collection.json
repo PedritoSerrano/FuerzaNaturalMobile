@@ -1,0 +1,651 @@
+{
+  "info": {
+    "name": "Fuerza Natural API",
+    "_postman_id": "fuerza-natural-api-collection",
+    "description": "Colección completa de la API Laravel usada por la app Flutter Fuerza Natural.\n\n**Setup:**\n1. Importa esta colección en Postman.\n2. Crea un entorno con la variable `base_url = http://localhost:8000/api`.\n3. Ejecuta **Login** primero — el token se guarda automáticamente en `{{token}}`.\n4. El resto de requests autenticados ya incluyen `Authorization: Bearer {{token}}`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "description": "URL base de la API. Cámbiala a http://10.0.2.2:8000/api si usas emulador Android."
+    },
+    {
+      "key": "token",
+      "value": "",
+      "description": "Token Bearer Sanctum. Se rellena automáticamente al hacer Login."
+    },
+    {
+      "key": "finca_id",
+      "value": "1",
+      "description": "ID de la finca para pruebas individuales."
+    },
+    {
+      "key": "reserva_id",
+      "value": "1",
+      "description": "ID de la reserva para pruebas individuales."
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "const token = res.access_token || res.token;",
+                  "if (token) {",
+                  "    pm.collectionVariables.set('token', token);",
+                  "    console.log('✅ Token guardado:', token.substring(0, 20) + '...');",
+                  "} else {",
+                  "    console.error('❌ No se encontró token en la respuesta:', JSON.stringify(res));",
+                  "}",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene token', () => pm.expect(token).to.be.a('string').and.not.empty);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"propietario@example.com\",\n  \"password\": \"password\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            },
+            "description": "Inicia sesión con email y contraseña. El token Sanctum se guarda automáticamente en la variable `{{token}}`."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": ["{{base_url}}"],
+              "path": ["logout"]
+            },
+            "description": "Invalida el token en el servidor (Sanctum)."
+          }
+        },
+        {
+          "name": "Get Me (usuario autenticado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene id', () => pm.expect(pm.response.json()).to.have.property('id'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user",
+              "host": ["{{base_url}}"],
+              "path": ["user"]
+            },
+            "description": "Devuelve los datos del usuario autenticado.\nEquivalente a GET /api/user en Laravel Sanctum."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏡 Fincas (públicas)",
+      "item": [
+        {
+          "name": "Listar fincas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Es array o tiene data', () => {",
+                  "    pm.expect(Array.isArray(body) || Array.isArray(body.data)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/fincas",
+              "host": ["{{base_url}}"],
+              "path": ["fincas"],
+              "query": [
+                { "key": "search", "value": "", "disabled": true, "description": "Búsqueda por nombre" },
+                { "key": "provincia", "value": "Sevilla", "disabled": true, "description": "Filtrar por provincia" },
+                { "key": "destacada", "value": "1", "disabled": true, "description": "Solo fincas destacadas" }
+              ]
+            },
+            "description": "Lista todas las fincas. Admite query params: `search`, `provincia`, `destacada=1`.\nNo requiere autenticación."
+          }
+        },
+        {
+          "name": "Detalle de finca",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tiene nombre', () => {",
+                  "    const body = pm.response.json();",
+                  "    const finca = body.finca || body;",
+                  "    pm.expect(finca).to.have.property('nombre');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/fincas/{{finca_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["fincas", "{{finca_id}}"]
+            },
+            "description": "Devuelve el detalle de una finca por su ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏠 Mis Fincas (propietario)",
+      "item": [
+        {
+          "name": "Listar mis fincas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Es array', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(Array.isArray(body) || Array.isArray(body.data)).to.be.true;",
+                  "});",
+                  "",
+                  "// Mostrar resumen de campos de la primera finca",
+                  "const arr = Array.isArray(pm.response.json()) ? pm.response.json() : pm.response.json().data || [];",
+                  "if (arr.length > 0) {",
+                  "    console.log('Primera finca:', JSON.stringify(arr[0], null, 2));",
+                  "    const f = arr[0];",
+                  "    console.log('  especies:', f.especies, '| tipo:', typeof f.especies);",
+                  "    console.log('  servicios:', f.servicios, '| tipo:', typeof f.servicios);",
+                  "    console.log('  normas:', f.normas);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mis-fincas",
+              "host": ["{{base_url}}"],
+              "path": ["mis-fincas"]
+            },
+            "description": "Devuelve las fincas del propietario autenticado.\nEl script de Tests imprime en consola los campos `especies`, `servicios` y `normas` para verificar que se devuelven correctamente."
+          }
+        },
+        {
+          "name": "Crear finca (JSON sin fotos)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "const finca = body.finca || body;",
+                  "pm.test('Tiene id', () => pm.expect(finca).to.have.property('id'));",
+                  "pm.test('Especies guardadas', () => {",
+                  "    pm.expect(finca.especies).to.be.an('array').and.not.empty;",
+                  "    console.log('Especies recibidas:', finca.especies);",
+                  "});",
+                  "pm.test('Servicios guardados', () => {",
+                  "    pm.expect(finca.servicios).to.be.an('array').and.not.empty;",
+                  "});",
+                  "pm.test('Normas guardadas', () => {",
+                  "    pm.expect(finca.normas).to.be.a('string').and.not.empty;",
+                  "});",
+                  "// Guardar el ID para pruebas siguientes",
+                  "if (finca.id) pm.collectionVariables.set('finca_id', finca.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Finca de Prueba Postman\",\n  \"descripcion\": \"Descripción larga de la finca de prueba creada desde Postman.\",\n  \"localidad\": \"Cazalla de la Sierra\",\n  \"provincia\": \"Sevilla\",\n  \"ubicacion\": \"Cazalla de la Sierra, Sevilla\",\n  \"extension\": 500,\n  \"superficie\": 500,\n  \"precio_base\": 250,\n  \"precio_dia\": 250,\n  \"capacidad\": 8,\n  \"especies\": \"Ciervo,Jabalí,Corzo\",\n  \"servicios\": \"Alojamiento,Guía de caza,Comidas incluidas\",\n  \"normas\": \"Licencia obligatoria\\nNo disparar desde vehículos\\nMáximo 6 cazadores\",\n  \"estado\": \"activa\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/mis-fincas",
+              "host": ["{{base_url}}"],
+              "path": ["mis-fincas"]
+            },
+            "description": "Crea una finca nueva con todos sus campos.\n- `especies` y `servicios`: string CSV separado por comas.\n- `normas`: texto libre (saltos de línea separarán las normas en la app).\n- El ID de la finca creada se guarda automáticamente en `{{finca_id}}`."
+          }
+        },
+        {
+          "name": "Crear finca (multipart con fotos)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "nombre", "value": "Finca Fotos Postman", "type": "text" },
+                { "key": "descripcion", "value": "Finca de prueba con fotos subidas como multipart.", "type": "text" },
+                { "key": "localidad", "value": "Ronda", "type": "text" },
+                { "key": "provincia", "value": "Málaga", "type": "text" },
+                { "key": "ubicacion", "value": "Ronda, Málaga", "type": "text" },
+                { "key": "extension", "value": "300", "type": "text" },
+                { "key": "precio_base", "value": "180", "type": "text" },
+                { "key": "capacidad", "value": "6", "type": "text" },
+                { "key": "especies", "value": "Perdiz,Conejo,Liebre", "type": "text" },
+                { "key": "servicios", "value": "Guía de caza,Perros de caza", "type": "text" },
+                { "key": "normas", "value": "Caza menor únicamente\nMáximo 4 cazadores", "type": "text" },
+                { "key": "estado", "value": "activa", "type": "text" },
+                {
+                  "key": "imagenes[]",
+                  "type": "file",
+                  "src": [],
+                  "description": "Selecciona una o más imágenes desde tu equipo"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/mis-fincas",
+              "host": ["{{base_url}}"],
+              "path": ["mis-fincas"]
+            },
+            "description": "Crea una finca con fotos usando `multipart/form-data`.\nAñade archivos en el campo `imagenes[]` (puedes añadir varios con el mismo nombre de clave)."
+          }
+        },
+        {
+          "name": "Actualizar finca (especies, servicios, normas)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const finca = (pm.response.json().finca || pm.response.json());",
+                  "pm.test('Especies guardadas', () => {",
+                  "    console.log('especies:', finca.especies, '| tipo:', typeof finca.especies);",
+                  "    pm.expect(Array.isArray(finca.especies)).to.be.true;",
+                  "    pm.expect(finca.especies.length).to.be.above(0);",
+                  "});",
+                  "pm.test('Servicios guardados', () => {",
+                  "    console.log('servicios:', finca.servicios);",
+                  "    pm.expect(Array.isArray(finca.servicios)).to.be.true;",
+                  "});",
+                  "pm.test('Normas guardadas', () => {",
+                  "    console.log('normas:', finca.normas);",
+                  "    pm.expect(finca.normas).to.be.a('string').and.not.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"especies\": \"Ciervo,Jabalí,Corzo\",\n  \"servicios\": \"Alojamiento,Guía de caza,Comidas incluidas\",\n  \"normas\": \"Licencia obligatoria\\nNo disparar desde vehículos\\nMáximo 6 cazadores\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/mis-fincas/{{finca_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["mis-fincas", "{{finca_id}}"]
+            },
+            "description": "Actualiza los campos de una finca existente.\n\n⚠️ **Usar esto para fincas creadas ANTES de la migración** que tienen null en especies/servicios/normas.\n\nSolo se actualizan los campos que envíes. Puedes enviar uno o todos."
+          }
+        },
+        {
+          "name": "Cambiar estado de finca",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"pausada\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/mis-fincas/{{finca_id}}/estado",
+              "host": ["{{base_url}}"],
+              "path": ["mis-fincas", "{{finca_id}}", "estado"]
+            },
+            "description": "Cambia el estado de una finca. Valores válidos: `activa`, `pausada`, `inactiva`."
+          }
+        },
+        {
+          "name": "Eliminar finca",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mis-fincas/{{finca_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["mis-fincas", "{{finca_id}}"]
+            },
+            "description": "Elimina permanentemente la finca con el ID `{{finca_id}}`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📅 Mis Reservas (cliente)",
+      "item": [
+        {
+          "name": "Listar mis reservas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const arr = Array.isArray(pm.response.json()) ? pm.response.json() : pm.response.json().data || pm.response.json().reservas || [];",
+                  "console.log('Total reservas:', arr.length);",
+                  "if (arr.length > 0) {",
+                  "    console.log('Primera reserva:', JSON.stringify(arr[0], null, 2));",
+                  "    pm.collectionVariables.set('reserva_id', arr[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mis-reservas",
+              "host": ["{{base_url}}"],
+              "path": ["mis-reservas"]
+            },
+            "description": "Devuelve las reservas del usuario autenticado.\nEl script guarda automáticamente el ID de la primera reserva en `{{reserva_id}}`."
+          }
+        },
+        {
+          "name": "Detalle de reserva",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mis-reservas/{{reserva_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["mis-reservas", "{{reserva_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Crear reserva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 o 201', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "const reserva = body.reserva || body;",
+                  "if (reserva.id) pm.collectionVariables.set('reserva_id', reserva.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"finca_id\": {{finca_id}},\n  \"fecha\": \"2026-06-15\",\n  \"tipo_reserva\": \"rececho\",\n  \"numero_personas\": 2,\n  \"notas\": \"Reserva de prueba desde Postman\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/mis-reservas",
+              "host": ["{{base_url}}"],
+              "path": ["mis-reservas"]
+            },
+            "description": "Crea una reserva de un día para una finca.\n- `finca_id`: ID de la finca.\n- `fecha`: formato `YYYY-MM-DD` (un solo día).\n- `tipo_reserva`: `monteria` | `rececho` | `visita`.\n- `numero_personas`: 1-30.\n- `notas`: opcional."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛠️ Debug / Diagnóstico",
+      "item": [
+        {
+          "name": "Verificar token (ping)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    console.log('✅ Token válido. Usuario:', pm.response.json().email || pm.response.json().name);",
+                  "} else if (pm.response.code === 401) {",
+                  "    console.error('❌ Token inválido o expirado. Haz Login otra vez.');",
+                  "} else {",
+                  "    console.warn('⚠️ Respuesta inesperada:', pm.response.code);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user",
+              "host": ["{{base_url}}"],
+              "path": ["user"]
+            },
+            "description": "Comprueba rápidamente si el token actual `{{token}}` sigue siendo válido.\n✅ 200 = token OK | ❌ 401 = debes hacer Login de nuevo."
+          }
+        },
+        {
+          "name": "⚠️ Diagnóstico — qué recibe el servidor al crear",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const dbg = body._debug_received;",
+                  "if (dbg) {",
+                  "    console.log('=== LO QUE LLEGÓ AL SERVIDOR ===');",
+                  "    console.log('especies_raw  :', dbg.especies_raw,  '| tipo:', typeof dbg.especies_raw);",
+                  "    console.log('servicios_raw :', dbg.servicios_raw, '| tipo:', typeof dbg.servicios_raw);",
+                  "    console.log('normas_raw    :', dbg.normas_raw);",
+                  "    console.log('Claves recibidas:', dbg.all_keys.join(', '));",
+                  "",
+                  "    if (dbg.especies_raw === null) {",
+                  "        console.error('❌ especies llegó como NULL — el campo no está en el body o el nombre no coincide');",
+                  "    } else {",
+                  "        console.log('✅ especies recibida correctamente');",
+                  "    }",
+                  "} else {",
+                  "    console.warn('⚠️ No hay _debug_received — actualiza el servidor con el último FincaController.php');",
+                  "}",
+                  "",
+                  "const finca = body.finca || {};",
+                  "pm.test('especies guardada como array', () => {",
+                  "    pm.expect(Array.isArray(finca.especies)).to.be.true;",
+                  "});",
+                  "pm.test('servicios guardado como array', () => {",
+                  "    pm.expect(Array.isArray(finca.servicios)).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"TEST DEBUG especies\",\n  \"descripcion\": \"Finca de diagnóstico\",\n  \"provincia\": \"Madrid\",\n  \"extension\": 100,\n  \"precio_base\": 50,\n  \"especies\": \"Ciervo,Jabalí\",\n  \"servicios\": \"Alojamiento,Guía de caza\",\n  \"normas\": \"Norma 1\\nNorma 2\",\n  \"estado\": \"activa\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/mis-fincas",
+              "host": ["{{base_url}}"],
+              "path": ["mis-fincas"]
+            },
+            "description": "Crea una finca mínima de diagnóstico.\n\nLa respuesta incluye `_debug_received` con exactamente lo que llegó al servidor.\n\n**Casos posibles:**\n- `especies_raw = null` → el campo no llega al servidor\n- `especies_raw = \"Ciervo,Jabalí\"` → llega como string (correcto, se procesa internamente)\n- `finca.especies = [\"Ciervo\",\"Jabalí\"]` → guardado y devuelto como array ✅\n- `finca.especies = null` → el cast falló o la columna no existe ❌"
+          }
+        },
+        {
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const arr = Array.isArray(pm.response.json()) ? pm.response.json() : pm.response.json().data || [];",
+                  "console.log('=== DIAGNÓSTICO FINCAS ===');",
+                  "arr.forEach((f, i) => {",
+                  "    console.log(`Finca [${i}] ID=${f.id} — ${f.nombre}`);",
+                  "    console.log(`  especies  (${typeof f.especies}):`, f.especies);",
+                  "    console.log(`  servicios (${typeof f.servicios}):`, f.servicios);",
+                  "    console.log(`  normas    (${typeof f.normas}):`, f.normas);",
+                  "    console.log(`  imagenes  (${typeof f.imagenes}):`, f.imagenes);",
+                  "    ",
+                  "    pm.test(`Finca ${f.id} — especies es array`, () => {",
+                  "        pm.expect(f.especies === null || Array.isArray(f.especies)).to.be.true;",
+                  "    });",
+                  "    pm.test(`Finca ${f.id} — servicios es array`, () => {",
+                  "        pm.expect(f.servicios === null || Array.isArray(f.servicios)).to.be.true;",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/mis-fincas",
+              "host": ["{{base_url}}"],
+              "path": ["mis-fincas"]
+            },
+            "description": "Igual que 'Listar mis fincas' pero con tests detallados que validan que `especies` y `servicios` vienen como arrays JSON (no como strings), y que `normas` tiene contenido. Útil para diagnosticar el bug de tabs vacíos."
+          }
+        }
+      ]
+    }
+  ]
+}

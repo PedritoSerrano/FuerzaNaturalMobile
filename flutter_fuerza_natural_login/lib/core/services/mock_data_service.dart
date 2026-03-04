@@ -13,7 +13,7 @@ class MockDataService {
         ubicacion: 'Madrid, España',
         fechaRegistro: DateTime(2022, 3, 15),
         reservasRealizadas: 12,
-        fincasFavoritas: 5,
+        fincasCount: 1,
         rol: UserRole.cliente,
       );
 

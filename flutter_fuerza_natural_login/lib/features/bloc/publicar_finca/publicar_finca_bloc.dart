@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_fuerza_natural_login/core/services/fincas_repository.dart';
 
@@ -18,6 +20,7 @@ class PublicarFincaBloc extends Bloc<PublicarFincaEvent, PublicarFincaState> {
     on<PublicarFincaActualizarEspecies>(_onActualizarEspecies);
     on<PublicarFincaActualizarServicios>(_onActualizarServicios);
     on<PublicarFincaActualizarNormas>(_onActualizarNormas);
+    on<PublicarFincaActualizarFotos>(_onActualizarFotos);
     on<PublicarFincaPublicar>(_onPublicar);
     on<PublicarFincaReset>(_onReset);
   }
@@ -73,6 +76,11 @@ class PublicarFincaBloc extends Bloc<PublicarFincaEvent, PublicarFincaState> {
     emit(state.copyWith(normas: e.normas));
   }
 
+  void _onActualizarFotos(
+      PublicarFincaActualizarFotos e, Emitter<PublicarFincaState> emit) {
+    emit(state.copyWith(fotos: e.fotos));
+  }
+
   Future<void> _onPublicar(
       PublicarFincaPublicar e, Emitter<PublicarFincaState> emit) async {
     if (!state.datosCompletos) {
@@ -82,18 +90,45 @@ class PublicarFincaBloc extends Bloc<PublicarFincaEvent, PublicarFincaState> {
     }
     emit(state.copyWith(publicando: true, error: null));
     try {
-      await _repo.crearFinca({
+      // Build ubicacion string from province + locality
+      final ubicacion = [state.localidad, state.provincia]
+          .where((s) => s.isNotEmpty)
+          .join(', ');
+
+      // Build multipart form data so photos can be uploaded as files
+      final formData = FormData.fromMap({
         'nombre': state.nombre,
+        'ubicacion': ubicacion,
         'provincia': state.provincia,
         'localidad': state.localidad,
         'descripcion': state.descripcion,
-        'superficie': state.superficie,
-        'precio_dia': state.precioDia,
+        // Map Flutter field names → Laravel DB column names
+        'extension': state.superficie,
+        'superficie': state.superficie, // fallback
+        'precio_base': state.precioDia,
+        'precio_dia': state.precioDia, // fallback
         'capacidad': state.capacidad,
-        'especies': state.especies,
-        'servicios': state.servicios,
+        'especies': state.especies.join(','),
+        'servicios': state.servicios.join(','),
         'normas': state.normas,
+        'estado': 'activa',
       });
+
+      // Attach photo files (if any)
+      for (int i = 0; i < state.fotos.length; i++) {
+        final file = File(state.fotos[i]);
+        if (await file.exists()) {
+          formData.files.add(MapEntry(
+            'imagenes[]',
+            await MultipartFile.fromFile(
+              file.path,
+              filename: 'foto_$i.jpg',
+            ),
+          ));
+        }
+      }
+
+      await _repo.crearFincaFormData(formData);
       emit(state.copyWith(publicando: false, publicada: true));
     } catch (err) {
       emit(state.copyWith(publicando: false, error: err.toString()));

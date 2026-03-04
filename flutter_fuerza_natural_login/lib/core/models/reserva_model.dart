@@ -6,6 +6,8 @@ enum EstadoReserva {
   enCurso,
 }
 
+enum TipoReserva { monteria, rececho, visita }
+
 class ReservaModel {
   final String id;
   final String clienteId;
@@ -22,11 +24,13 @@ class ReservaModel {
   final double precioTotal;
   final double? descuento;
   final EstadoReserva estado;
+  final TipoReserva? tipoReserva;
   final String? notas;
   final DateTime fechaReserva;
   final DateTime? fechaConfirmacion;
   final DateTime? fechaCancelacion;
   final String? motivoCancelacion;
+  final bool tieneValoracion;
 
   const ReservaModel({
     required this.id,
@@ -44,46 +48,112 @@ class ReservaModel {
     required this.precioTotal,
     this.descuento,
     this.estado = EstadoReserva.pendiente,
+    this.tipoReserva,
     this.notas,
     required this.fechaReserva,
     this.fechaConfirmacion,
     this.fechaCancelacion,
     this.motivoCancelacion,
+    this.tieneValoracion = false,
   });
 
   String get ubicacion => '$fincaProvincia, $fincaPais';
 
+  // ── Parsing helpers ──────────────────────────────────────────────────────
+  static double _d(dynamic v) =>
+      (num.tryParse(v?.toString() ?? '') ?? 0).toDouble();
+
+  static int _i(dynamic v) =>
+      (num.tryParse(v?.toString() ?? '') ?? 0).toInt();
+
+  static DateTime _dt(dynamic v) {
+    if (v == null) return DateTime.now();
+    return DateTime.tryParse(v.toString()) ?? DateTime.now();
+  }
+
+  static DateTime? _dtOpt(dynamic v) {
+    if (v == null) return null;
+    return DateTime.tryParse(v.toString());
+  }
+
+  static EstadoReserva _parseEstado(dynamic v) {
+    final s = v?.toString().toLowerCase() ?? '';
+    if (s == 'confirmada' || s == 'confirmed') return EstadoReserva.confirmada;
+    if (s == 'cancelada' || s == 'cancelled' || s == 'canceled') return EstadoReserva.cancelada;
+    if (s == 'completada' || s == 'completed') return EstadoReserva.completada;
+    if (s == 'encurso' || s == 'en_curso' || s == 'in_progress') return EstadoReserva.enCurso;
+    return EstadoReserva.pendiente;
+  }
+
+  static TipoReserva? _parseTipo(dynamic v) {
+    final s = v?.toString().toLowerCase() ?? '';
+    if (s == 'monteria' || s == 'montería') return TipoReserva.monteria;
+    if (s == 'rececho') return TipoReserva.rececho;
+    if (s == 'visita') return TipoReserva.visita;
+    return null;
+  }
+
+  static String tipoLabel(TipoReserva? t) {
+    switch (t) {
+      case TipoReserva.monteria: return 'Montería';
+      case TipoReserva.rececho:  return 'Rececho';
+      case TipoReserva.visita:   return 'Visita';
+      default: return 'Sin tipo';
+    }
+  }
+
   factory ReservaModel.fromJson(Map<String, dynamic> json) {
+    // Backend: reserva → evento → finca (nested via eager loading)
+    final evento = json['evento'] as Map<String, dynamic>?;
+    final fincaMap = evento?['finca'] as Map<String, dynamic>?;
+
+    // Finca images: backend stores array in 'imagenes'
+    String? _fincaImage(Map<String, dynamic>? f) {
+      if (f == null) return null;
+      final imgs = f['imagenes'];
+      if (imgs is List && imgs.isNotEmpty) return imgs[0].toString();
+      if (imgs is String && imgs.isNotEmpty) return imgs;
+      return f['imageUrl']?.toString() ?? f['image_url']?.toString();
+    }
+
+    // Parse provincia from 'ubicacion' field (e.g., "Sevilla, España")
+    String _provFromUbicacion(Map<String, dynamic>? f) {
+      if (f == null) return '';
+      final prov = f['provincia']?.toString() ?? '';
+      if (prov.isNotEmpty) return prov;
+      final ub = f['ubicacion']?.toString() ?? '';
+      return ub.split(',').first.trim();
+    }
+
     return ReservaModel(
-      id: json['id'] as String,
-      clienteId: json['clienteId'] as String,
-      clienteNombre: json['clienteNombre'] as String,
-      fincaId: json['fincaId'] as String,
-      fincaNombre: json['fincaNombre'] as String,
-      fincaProvincia: json['fincaProvincia'] as String? ?? '',
-      fincaPais: json['fincaPais'] as String? ?? '',
-      fincaImageUrl: json['fincaImageUrl'] as String?,
-      fechaInicio: DateTime.parse(json['fechaInicio'] as String),
-      fechaFin: DateTime.parse(json['fechaFin'] as String),
-      numeroDias: json['numeroDias'] as int,
-      numeroPersonas: json['numeroPersonas'] as int,
-      precioTotal: (json['precioTotal'] as num).toDouble(),
-      descuento: json['descuento'] != null
-          ? (json['descuento'] as num).toDouble()
-          : null,
-      estado: EstadoReserva.values.firstWhere(
-        (e) => e.toString() == 'EstadoReserva.${json['estado']}',
-        orElse: () => EstadoReserva.pendiente,
-      ),
-      notas: json['notas'] as String?,
-      fechaReserva: DateTime.parse(json['fechaReserva'] as String),
-      fechaConfirmacion: json['fechaConfirmacion'] != null
-          ? DateTime.parse(json['fechaConfirmacion'] as String)
-          : null,
-      fechaCancelacion: json['fechaCancelacion'] != null
-          ? DateTime.parse(json['fechaCancelacion'] as String)
-          : null,
-      motivoCancelacion: json['motivoCancelacion'] as String?,
+      id: json['id']?.toString() ?? '0',
+      // Backend uses 'id_usuario'
+      clienteId: (json['id_usuario'] ?? json['clienteId'] ?? json['cliente_id'] ?? json['user_id'] ?? '0').toString(),
+      clienteNombre: (json['clienteNombre'] ?? json['cliente_nombre'] ?? json['user_name'] ?? '').toString(),
+      // Finca data comes through nested evento → finca
+      fincaId: (fincaMap?['id'] ?? evento?['id_finca'] ?? json['fincaId'] ?? json['finca_id'] ?? '0').toString(),
+      fincaNombre: (fincaMap?['nombre'] ?? json['fincaNombre'] ?? json['finca_nombre'] ?? json['finca']?['nombre'] ?? '').toString(),
+      fincaProvincia: _provFromUbicacion(fincaMap),
+      fincaPais: (fincaMap?['pais'] ?? '').toString(),
+      fincaImageUrl: _fincaImage(fincaMap) ?? json['fincaImageUrl']?.toString() ?? json['finca_image_url']?.toString(),
+      // Dates come from evento
+      fechaInicio: _dt(evento?['fecha_inicio'] ?? json['fechaInicio'] ?? json['fecha_inicio']),
+      fechaFin: _dt(evento?['fecha_fin'] ?? json['fechaFin'] ?? json['fecha_fin']),
+      numeroDias: _i(json['numeroDias'] ?? json['numero_dias']),
+      numeroPersonas: _i(json['numero_personas'] ?? json['numeroPersonas'] ?? json['numero_personas']) == 0
+          ? 1
+          : _i(json['numero_personas'] ?? json['numeroPersonas']),
+      // Price from evento
+      precioTotal: _d(evento?['precio'] ?? json['precioTotal'] ?? json['precio_total']),
+      descuento: json['descuento'] != null ? _d(json['descuento']) : null,
+      estado: _parseEstado(json['estado']),
+      tipoReserva: _parseTipo(json['tipo_reserva'] ?? evento?['tipo']),
+      notas: (json['notas'] ?? json['metodo_pago'])?.toString(),
+      fechaReserva: _dt(json['fechaReserva'] ?? json['fecha_reserva'] ?? json['created_at']),
+      fechaConfirmacion: _dtOpt(json['fechaConfirmacion'] ?? json['fecha_confirmacion']),
+      fechaCancelacion: _dtOpt(json['fechaCancelacion'] ?? json['fecha_cancelacion']),
+      motivoCancelacion: (json['motivoCancelacion'] ?? json['motivo_cancelacion'])?.toString(),
+      tieneValoracion: (_i(json['valoraciones_count'])) > 0,
     );
   }
 
@@ -104,11 +174,13 @@ class ReservaModel {
       'precioTotal': precioTotal,
       'descuento': descuento,
       'estado': estado.toString().split('.').last,
+      'tipo_reserva': tipoReserva?.toString().split('.').last,
       'notas': notas,
       'fechaReserva': fechaReserva.toIso8601String(),
       'fechaConfirmacion': fechaConfirmacion?.toIso8601String(),
       'fechaCancelacion': fechaCancelacion?.toIso8601String(),
       'motivoCancelacion': motivoCancelacion,
+      'tieneValoracion': tieneValoracion,
     };
   }
 
@@ -128,11 +200,13 @@ class ReservaModel {
     double? precioTotal,
     double? descuento,
     EstadoReserva? estado,
+    TipoReserva? tipoReserva,
     String? notas,
     DateTime? fechaReserva,
     DateTime? fechaConfirmacion,
     DateTime? fechaCancelacion,
     String? motivoCancelacion,
+    bool? tieneValoracion,
   }) {
     return ReservaModel(
       id: id ?? this.id,
@@ -150,11 +224,13 @@ class ReservaModel {
       precioTotal: precioTotal ?? this.precioTotal,
       descuento: descuento ?? this.descuento,
       estado: estado ?? this.estado,
+      tipoReserva: tipoReserva ?? this.tipoReserva,
       notas: notas ?? this.notas,
       fechaReserva: fechaReserva ?? this.fechaReserva,
       fechaConfirmacion: fechaConfirmacion ?? this.fechaConfirmacion,
       fechaCancelacion: fechaCancelacion ?? this.fechaCancelacion,
       motivoCancelacion: motivoCancelacion ?? this.motivoCancelacion,
+      tieneValoracion: tieneValoracion ?? this.tieneValoracion,
     );
   }
 }

@@ -43,6 +43,12 @@ dependencies:
   dio: ^5.7.0
   flutter_secure_storage: ^9.2.2
 
+  # Media & Maps
+  image_picker: ^1.1.2
+  flutter_map: ^8.1.1
+  latlong2: ^0.9.1
+  url_launcher: ^6.3.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

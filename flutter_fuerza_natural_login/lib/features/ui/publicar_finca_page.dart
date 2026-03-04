@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_fuerza_natural_login/core/services/mock_data_service.dart';
 import 'package:flutter_fuerza_natural_login/features/bloc/publicar_finca/publicar_finca_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 
 class PublicarFincaPage extends StatelessWidget {
   const PublicarFincaPage({super.key});
@@ -45,7 +47,7 @@ class _PublicarFincaView extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
                 content: Text('¡Finca publicada con éxito!'),
-                backgroundColor: Color(0xFF2E7D32)),
+                backgroundColor: Color(0xFF1e5a3a)),
           );
         }
         if (state.error != null) {
@@ -78,7 +80,7 @@ class _PublicarFincaView extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, PublicarFincaState state) {
     return Container(
-      color: const Color(0xFF2E7D32),
+      color: const Color(0xFF1e5a3a),
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 12,
         left: 16,
@@ -98,7 +100,7 @@ class _PublicarFincaView extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.chevron_left,
@@ -145,7 +147,7 @@ class _PublicarFincaView extends StatelessWidget {
                             ? Colors.white
                             : active
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.3),
+                                : Colors.white.withValues(alpha: 0.3),
                         shape: BoxShape.circle,
                         border: active
                             ? Border.all(color: Colors.white, width: 2)
@@ -155,7 +157,7 @@ class _PublicarFincaView extends StatelessWidget {
                         done ? Icons.check : _pasoIcons[i],
                         size: 16,
                         color: done || active
-                            ? const Color(0xFF2E7D32)
+                            ? const Color(0xFF1e5a3a)
                             : Colors.white54,
                       ),
                     ),
@@ -231,7 +233,7 @@ class _PublicarFincaView extends StatelessWidget {
                 }
               : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2E7D32),
+            backgroundColor: const Color(0xFF1e5a3a),
             disabledBackgroundColor: Colors.grey.shade300,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -561,12 +563,12 @@ class _PasoEspecies extends StatelessWidget {
                         horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: selected
-                          ? const Color(0xFF2E7D32)
+                          ? const Color(0xFF1e5a3a)
                           : Colors.white,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
                         color: selected
-                            ? const Color(0xFF2E7D32)
+                            ? const Color(0xFF1e5a3a)
                             : Colors.grey.shade300,
                       ),
                     ),
@@ -654,10 +656,10 @@ class _PasoServicios extends StatelessWidget {
               child: Icon(s.$2,
                   size: 20,
                   color: selected
-                      ? const Color(0xFF2E7D32)
+                      ? const Color(0xFF1e5a3a)
                       : Colors.grey),
             ),
-            activeColor: const Color(0xFF2E7D32),
+            activeColor: const Color(0xFF1e5a3a),
             contentPadding: EdgeInsets.zero,
           );
         }),
@@ -735,54 +737,154 @@ class _PasoFotos extends StatelessWidget {
   final PublicarFincaState state;
   const _PasoFotos({required this.state});
 
+  static final _picker = ImagePicker();
+
+  Future<void> _pickImages(BuildContext context) async {
+    try {
+      final List<XFile> picked = await _picker.pickMultiImage(imageQuality: 80);
+      if (picked.isEmpty) return;
+      final current = List<String>.from(state.fotos);
+      for (final x in picked) {
+        if (!current.contains(x.path)) current.add(x.path);
+      }
+      if (context.mounted) {
+        context.read<PublicarFincaBloc>().add(PublicarFincaActualizarFotos(current));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo acceder a la galería')),
+        );
+      }
+    }
+  }
+
+  void _removePhoto(BuildContext context, int index) {
+    final updated = List<String>.from(state.fotos)..removeAt(index);
+    context.read<PublicarFincaBloc>().add(PublicarFincaActualizarFotos(updated));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Fotos de la finca',
-            style:
-                TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
         const Text('Añade fotos atractivas para captar cazadores',
             style: TextStyle(color: Colors.grey, fontSize: 14)),
         const SizedBox(height: 24),
-        GestureDetector(
-          onTap: () {},
-          child: Container(
-            width: double.infinity,
-            height: 160,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: const Color(0xFFE0E0E0),
-                  style: BorderStyle.solid),
+
+        // Grid of selected photos
+        if (state.fotos.isNotEmpty) ...[
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
             ),
-            child: const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.add_photo_alternate_outlined,
-                    size: 48, color: Colors.grey),
-                SizedBox(height: 12),
-                Text('Toca para añadir fotos',
-                    style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500)),
-                SizedBox(height: 4),
-                Text('PNG, JPG hasta 10MB',
-                    style: TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
+            itemCount: state.fotos.length + 1, // +1 for "add more" button
+            itemBuilder: (context, i) {
+              if (i == state.fotos.length) {
+                // "Add more" tile
+                return GestureDetector(
+                  onTap: () => _pickImages(context),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFE0E0E0)),
+                    ),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_photo_alternate_outlined,
+                            size: 28, color: Color(0xFF1e5a3a)),
+                        SizedBox(height: 4),
+                        Text('Añadir',
+                            style: TextStyle(
+                                fontSize: 11, color: Color(0xFF1e5a3a))),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.file(
+                      File(state.fotos[i]),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: GestureDetector(
+                      onTap: () => _removePhoto(context, i),
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close,
+                            size: 14, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '${state.fotos.length} foto${state.fotos.length == 1 ? '' : 's'} seleccionada${state.fotos.length == 1 ? '' : 's'}',
+            style: const TextStyle(color: Colors.grey, fontSize: 13),
+          ),
+          const SizedBox(height: 16),
+        ] else ...[
+          // Empty state — tap to add
+          GestureDetector(
+            onTap: () => _pickImages(context),
+            child: Container(
+              width: double.infinity,
+              height: 160,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: const Color(0xFFE0E0E0),
+                    style: BorderStyle.solid),
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_photo_alternate_outlined,
+                      size: 48, color: Color(0xFF1e5a3a)),
+                  SizedBox(height: 12),
+                  Text('Toca para añadir fotos',
+                      style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500)),
+                  SizedBox(height: 4),
+                  Text('PNG, JPG hasta 10MB',
+                      style: TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Consejos para mejores resultados:',
-          style: TextStyle(
-              fontWeight: FontWeight.w600, fontSize: 14),
-        ),
+          const SizedBox(height: 16),
+        ],
+
+        const Text('Consejos para mejores resultados:',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
         const SizedBox(height: 10),
         ...[
           'Usa fotos tomadas durante el día con buena luz',
@@ -795,7 +897,7 @@ class _PasoFotos extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Icon(Icons.check_circle_outline,
-                      size: 16, color: Color(0xFF2E7D32)),
+                      size: 16, color: Color(0xFF1e5a3a)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(tip,
@@ -865,7 +967,7 @@ class _InputField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFF2E7D32)),
+          borderSide: const BorderSide(color: Color(0xFF1e5a3a)),
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 14),

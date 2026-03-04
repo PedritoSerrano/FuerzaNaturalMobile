@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_fuerza_natural_login/core/models/user_model.dart';
+import 'package:flutter_fuerza_natural_login/core/services/auth_repository.dart';
 import 'package:flutter_fuerza_natural_login/features/bloc/auth/auth_bloc.dart';
 import 'package:flutter_fuerza_natural_login/features/bloc/perfil/perfil_bloc.dart';
 import 'package:flutter_fuerza_natural_login/features/ui/mis_fincas_page.dart';
+import 'package:flutter_fuerza_natural_login/features/ui/mis_resenas_page.dart';
+import 'package:flutter_fuerza_natural_login/features/ui/widgets/app_error_widget.dart';
 
 class PerfilPage extends StatelessWidget {
   const PerfilPage({super.key});
@@ -26,15 +30,20 @@ class _PerfilView extends StatelessWidget {
         if (state is PerfilLoading || state is PerfilInitial) {
           return const Scaffold(
             body: Center(
-              child: CircularProgressIndicator(color: Color(0xFF2E7D32)),
+              child: CircularProgressIndicator(color: Color(0xFF1e5a3a)),
             ),
           );
         }
         if (state is PerfilLoaded) {
           return _buildLoaded(context, state);
         }
-        return const Scaffold(
-          body: Center(child: Text('Error al cargar perfil')),
+        final mensaje = state is PerfilError ? state.mensaje : 'No se pudo cargar el perfil.';
+        return Scaffold(
+          body: AppErrorWidget(
+            mensaje: mensaje,
+            onRetry: () =>
+                context.read<PerfilBloc>().add(const PerfilLoadRequested()),
+          ),
         );
       },
     );
@@ -49,7 +58,7 @@ class _PerfilView extends StatelessWidget {
           // Header
           SliverToBoxAdapter(
             child: Container(
-              color: const Color(0xFF2E7D32),
+              color: const Color(0xFF1e5a3a),
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + 16,
                 left: 20,
@@ -90,7 +99,7 @@ class _PerfilView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withValues(alpha: 0.06),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -108,25 +117,11 @@ class _PerfilView extends StatelessWidget {
                                 backgroundColor:
                                     const Color(0xFFE8F5E9),
                                 child: Text(
-                                  user.nombre[0],
+                                  user.nombre[0].toUpperCase(),
                                   style: const TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF2E7D32),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 2,
-                                right: 2,
-                                child: Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: Colors.green,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                        color: Colors.white, width: 2),
+                                    color: Color(0xFF1e5a3a),
                                   ),
                                 ),
                               ),
@@ -192,8 +187,8 @@ class _PerfilView extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _ProfileStatBox(
-                              value: user.fincasFavoritas.toString(),
-                              label: 'Fincas favoritas',
+                              value: user.fincasCount.toString(),
+                              label: 'Mis fincas',
                             ),
                           ),
                         ],
@@ -210,13 +205,19 @@ class _PerfilView extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.person_outline,
                     label: 'Editar perfil',
-                    onTap: () {},
+                    onTap: () => _showEditarPerfil(context, user),
                   ),
                   _MenuItem(
                     icon: Icons.rate_review_outlined,
                     label: 'Mis reseñas',
-                    badge: '3',
-                    onTap: () {},
+                    badge: user.valoracionesCount > 0
+                        ? user.valoracionesCount.toString()
+                        : null,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const MisResenasPage()),
+                    ),
                   ),
                 ]),
                 const SizedBox(height: 20),
@@ -276,6 +277,19 @@ class _PerfilView extends StatelessWidget {
     );
   }
 
+  void _showEditarPerfil(BuildContext context, UserModel user) {
+    final bloc = context.read<PerfilBloc>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BlocProvider.value(
+        value: bloc,
+        child: _EditarPerfilSheet(user: user),
+      ),
+    );
+  }
+
   String _formatMonth(DateTime d) {
     const months = [
       '', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -297,7 +311,7 @@ class _ContactRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: const Color(0xFF2E7D32)),
+          Icon(icon, size: 18, color: const Color(0xFF1e5a3a)),
           const SizedBox(width: 10),
           Text(text,
               style: const TextStyle(fontSize: 14, color: Colors.black87)),
@@ -318,7 +332,7 @@ class _ProfileStatBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF2E7D32),
+        color: const Color(0xFF1e5a3a),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -365,7 +379,7 @@ class _MenuCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -393,7 +407,7 @@ class _MenuCard extends StatelessWidget {
                         ),
                         child: Icon(e.value.icon,
                             size: 20,
-                            color: const Color(0xFF2E7D32)),
+                            color: const Color(0xFF1e5a3a)),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -406,7 +420,7 @@ class _MenuCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2E7D32),
+                            color: const Color(0xFF1e5a3a),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -443,4 +457,184 @@ class _MenuItem {
       required this.label,
       this.badge,
       required this.onTap});
+}
+
+// ─── Editar Perfil sheet ───────────────────────────────────────
+class _EditarPerfilSheet extends StatefulWidget {
+  final UserModel user;
+  const _EditarPerfilSheet({required this.user});
+
+  @override
+  State<_EditarPerfilSheet> createState() => _EditarPerfilSheetState();
+}
+
+class _EditarPerfilSheetState extends State<_EditarPerfilSheet> {
+  late final TextEditingController _nombreCtrl;
+  late final TextEditingController _apellidosCtrl;
+  late final TextEditingController _telefonoCtrl;
+  late final TextEditingController _ubicacionCtrl;
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _nombreCtrl   = TextEditingController(text: widget.user.nombre);
+    _apellidosCtrl= TextEditingController(text: widget.user.apellidos ?? '');
+    _telefonoCtrl = TextEditingController(text: widget.user.telefono ?? '');
+    _ubicacionCtrl= TextEditingController(text: widget.user.ubicacion ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nombreCtrl.dispose();
+    _apellidosCtrl.dispose();
+    _telefonoCtrl.dispose();
+    _ubicacionCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _guardar() async {
+    final nombre = _nombreCtrl.text.trim();
+    if (nombre.isEmpty) {
+      setState(() => _error = 'El nombre no puede estar vacío.');
+      return;
+    }
+    setState(() { _loading = true; _error = null; });
+    try {
+      await AuthRepository().updateMiPerfil(
+        nombre:    nombre,
+        apellidos: _apellidosCtrl.text.trim().isNotEmpty ? _apellidosCtrl.text.trim() : null,
+        telefono:  _telefonoCtrl.text.trim().isNotEmpty  ? _telefonoCtrl.text.trim()  : null,
+        ubicacion: _ubicacionCtrl.text.trim().isNotEmpty ? _ubicacionCtrl.text.trim() : null,
+      );
+      if (mounted) {
+        context.read<PerfilBloc>().add(const PerfilLoadRequested());
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Perfil actualizado correctamente'),
+            backgroundColor: Color(0xFF1e5a3a),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() { _error = e.toString(); _loading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, bottom + 24),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Editar perfil',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            _Field(label: 'Nombre *', controller: _nombreCtrl),
+            const SizedBox(height: 14),
+            _Field(label: 'Apellidos', controller: _apellidosCtrl),
+            const SizedBox(height: 14),
+            _Field(label: 'Teléfono', controller: _telefonoCtrl,
+                keyboard: TextInputType.phone),
+            const SizedBox(height: 14),
+            _Field(label: 'Ubicación / Ciudad', controller: _ubicacionCtrl),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Text(_error!,
+                  style: const TextStyle(color: Colors.red, fontSize: 13)),
+            ],
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _loading ? null : _guardar,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1e5a3a),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: _loading
+                    ? const SizedBox(
+                        height: 20, width: 20,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    : const Text('Guardar cambios',
+                        style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Field extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final TextInputType keyboard;
+  const _Field({
+    required this.label,
+    required this.controller,
+    this.keyboard = TextInputType.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.black54)),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          keyboardType: keyboard,
+          decoration: InputDecoration(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  const BorderSide(color: Color(0xFF1e5a3a), width: 2),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

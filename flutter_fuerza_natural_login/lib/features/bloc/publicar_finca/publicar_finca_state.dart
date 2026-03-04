@@ -12,6 +12,7 @@ class PublicarFincaState {
   final List<String> especies;
   final List<String> servicios;
   final String normas;
+  final List<String> fotos; // local file paths
   final bool publicando;
   final bool publicada;
   final String? error;
@@ -28,6 +29,7 @@ class PublicarFincaState {
     this.especies = const [],
     this.servicios = const [],
     this.normas = '',
+    this.fotos = const [],
     this.publicando = false,
     this.publicada = false,
     this.error,
@@ -56,6 +58,7 @@ class PublicarFincaState {
     List<String>? especies,
     List<String>? servicios,
     String? normas,
+    List<String>? fotos,
     bool? publicando,
     bool? publicada,
     String? error,
@@ -72,6 +75,7 @@ class PublicarFincaState {
       especies: especies ?? this.especies,
       servicios: servicios ?? this.servicios,
       normas: normas ?? this.normas,
+      fotos: fotos ?? this.fotos,
       publicando: publicando ?? this.publicando,
       publicada: publicada ?? this.publicada,
       error: error,

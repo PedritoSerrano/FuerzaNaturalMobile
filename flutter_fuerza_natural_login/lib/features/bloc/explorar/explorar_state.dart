@@ -13,19 +13,31 @@ class ExplorarLoading extends ExplorarState {
 }
 
 class ExplorarLoaded extends ExplorarState {
-  final List<FincaModel> destacadas;
   final List<FincaModel> todas;
   final List<FincaModel> resultadosBusqueda;
   final String searchQuery;
+  final String? filtroProvincias;
+  final double? filtroMaxPrecio;
+  final double? filtroMinSuperficie;
 
   const ExplorarLoaded({
-    required this.destacadas,
     required this.todas,
     this.resultadosBusqueda = const [],
     this.searchQuery = '',
+    this.filtroProvincias,
+    this.filtroMaxPrecio,
+    this.filtroMinSuperficie,
   });
 
-  bool get enBusqueda => searchQuery.isNotEmpty;
+  bool get hayFiltros =>
+      (filtroProvincias != null && filtroProvincias!.isNotEmpty) ||
+      filtroMaxPrecio != null ||
+      filtroMinSuperficie != null;
+
+  bool get enBusqueda => searchQuery.isNotEmpty || hayFiltros;
+
+  List<FincaModel> get mostradas =>
+      enBusqueda ? resultadosBusqueda : todas;
 }
 
 class ExplorarError extends ExplorarState {

@@ -15,7 +15,8 @@ class UserModel {
   final UserRole rol;
   final bool activo;
   final int reservasRealizadas;
-  final int fincasFavoritas;
+  final int fincasCount;
+  final int valoracionesCount;
   final DateTime fechaRegistro;
   final DateTime? ultimoAcceso;
 
@@ -30,7 +31,8 @@ class UserModel {
     required this.rol,
     this.activo = true,
     this.reservasRealizadas = 0,
-    this.fincasFavoritas = 0,
+    this.fincasCount = 0,
+    this.valoracionesCount = 0,
     required this.fechaRegistro,
     this.ultimoAcceso,
   });
@@ -70,8 +72,9 @@ class UserModel {
         orElse: () => UserRole.cliente,
       ),
       activo: json['activo'] as bool? ?? true,
-      reservasRealizadas: json['reservasRealizadas'] as int? ?? 0,
-      fincasFavoritas: json['fincasFavoritas'] as int? ?? 0,
+      reservasRealizadas: (json['reservas_count'] ?? json['reservasRealizadas']) as int? ?? 0,
+      fincasCount: (json['fincas_count'] ?? json['fincasCount'] ?? json['fincasFavoritas']) as int? ?? 0,
+      valoracionesCount: (json['valoraciones_count'] ?? json['valoracionesCount']) as int? ?? 0,
       fechaRegistro: fechaRegistro,
       ultimoAcceso: ultimoRaw != null
           ? DateTime.tryParse(ultimoRaw as String)
@@ -91,7 +94,8 @@ class UserModel {
       'activo': activo,
       'ubicacion': ubicacion,
       'reservasRealizadas': reservasRealizadas,
-      'fincasFavoritas': fincasFavoritas,
+      'fincasCount': fincasCount,
+      'valoracionesCount': valoracionesCount,
       'fechaRegistro': fechaRegistro.toIso8601String(),
       'ultimoAcceso': ultimoAcceso?.toIso8601String(),
     };
@@ -108,7 +112,8 @@ class UserModel {
     UserRole? rol,
     bool? activo,
     int? reservasRealizadas,
-    int? fincasFavoritas,
+    int? fincasCount,
+    int? valoracionesCount,
     DateTime? fechaRegistro,
     DateTime? ultimoAcceso,
   }) {
@@ -123,7 +128,8 @@ class UserModel {
       rol: rol ?? this.rol,
       activo: activo ?? this.activo,
       reservasRealizadas: reservasRealizadas ?? this.reservasRealizadas,
-      fincasFavoritas: fincasFavoritas ?? this.fincasFavoritas,
+      fincasCount: fincasCount ?? this.fincasCount,
+      valoracionesCount: valoracionesCount ?? this.valoracionesCount,
       fechaRegistro: fechaRegistro ?? this.fechaRegistro,
       ultimoAcceso: ultimoAcceso ?? this.ultimoAcceso,
     );
