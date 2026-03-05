@@ -152,7 +152,13 @@ class _MisFincasView extends StatelessWidget {
             MaterialPageRoute(
               builder: (_) => const PublicarFincaPage(),
             ),
-          ),
+          ).then((_) {
+            if (context.mounted) {
+              context
+                  .read<MisFincasBloc>()
+                  .add(const MisFincasLoadRequested());
+            }
+          }),
           icon: const Icon(Icons.add),
           label: const Text(
             '+ Publicar nueva finca',
@@ -397,7 +403,7 @@ class _MiFincaCard extends StatelessWidget {
                 const Text(' • ',
                     style: TextStyle(color: Colors.black38)),
                 Text(
-                  '€${finca.precioDia.toStringAsFixed(0)}/día',
+                  '€${finca.precioDia.toStringAsFixed(0)}',
                   style: const TextStyle(
                       fontSize: 13, color: Colors.black54),
                 ),
@@ -435,6 +441,20 @@ class _MiFincaCard extends StatelessWidget {
                     final bloc = context.read<MisFincasBloc>();
                     if (inactiva) {
                       bloc.add(MisFincasActivarFinca(finca.id));
+                    } else if (finca.reservasPendientes > 0 || finca.totalReservas > 0) {
+                      final n = finca.reservasPendientes > 0
+                          ? finca.reservasPendientes
+                          : finca.totalReservas;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'No puedes inhabilitar "${finca.nombre}" porque tiene '
+                            '$n reserva${n > 1 ? 's' : ''} activa${n > 1 ? 's' : ''}.',
+                          ),
+                          backgroundColor: Colors.red.shade700,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
                     } else {
                       bloc.add(MisFincasInactivarFinca(finca.id));
                     }
@@ -442,31 +462,22 @@ class _MiFincaCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 _ActionBtn(
-                  icon: Icons.photo_library_outlined,
-                  label: 'Fotos',
+                  icon: Icons.edit_outlined,
+                  label: 'Editar',
                   color: const Color(0xFF1e5a3a),
-                  onTap: () {
-                    final bloc = context.read<MisFincasBloc>();
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(20)),
-                      ),
-                      builder: (_) => BlocProvider.value(
-                        value: bloc,
-                        child: _GestionFotosSheet(finca: finca),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(width: 8),
-                _ActionBtn(
-                  icon: Icons.visibility_outlined,
-                  label: 'Ver',
-                  color: const Color(0xFF1e5a3a),
-                  onTap: () {},
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          PublicarFincaPage(finca: finca),
+                    ),
+                  ).then((_) {
+                    if (context.mounted) {
+                      context
+                          .read<MisFincasBloc>()
+                          .add(const MisFincasLoadRequested());
+                    }
+                  }),
                 ),
                 const Spacer(),
                 GestureDetector(
@@ -490,6 +501,19 @@ class _MiFincaCard extends StatelessWidget {
   }
 
   void _confirmDelete(BuildContext context, FincaModel finca) {
+    if (finca.totalReservas > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'No puedes eliminar "${finca.nombre}" porque tiene '
+            '${finca.totalReservas} reserva${finca.totalReservas > 1 ? 's' : ''} asociada${finca.totalReservas > 1 ? 's' : ''}.',
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
     showDialog(
       context: context,
       builder: (_) => AlertDialog(

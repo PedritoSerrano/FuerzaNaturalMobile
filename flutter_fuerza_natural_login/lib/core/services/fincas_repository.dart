@@ -120,6 +120,22 @@ class FincasRepository {
     }
   }
 
+  /// PATCH /api/mis-fincas/{id}  (update finca data + optional new photos)
+  Future<FincaModel> actualizarFincaFormData(String id, FormData formData) async {
+    try {
+      final response = await _api.patchFormData(ApiConfig.miFincaDetalle(id), data: formData);
+      final data = response.data;
+      final map = (data is Map && data['finca'] is Map)
+          ? data['finca'] as Map<String, dynamic>
+          : data as Map<String, dynamic>;
+      return FincaModel.fromJson(map);
+    } on DioException catch (e) {
+      throw _parseDioError(e);
+    } catch (e) {
+      throw e.toString();
+    }
+  }
+
   /// PATCH /api/mis-fincas/{id}  (append new photos)
   Future<FincaModel> agregarFotosFinca(String id, List<String> fotoPaths) async {
     try {

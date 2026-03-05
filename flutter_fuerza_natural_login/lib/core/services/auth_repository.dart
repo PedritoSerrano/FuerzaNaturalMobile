@@ -34,6 +34,40 @@ class AuthRepository {
     }
   }
 
+  /// POST /api/register → crea un usuario nuevo, guarda token y devuelve el usuario
+  Future<UserModel> register({
+    required String nombre,
+    required String apellidos,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await _api.post(
+        ApiConfig.register,
+        data: {
+          'name': nombre,
+          'apellidos': apellidos,
+          'email': email,
+          'password': password,
+          'password_confirmation': password,
+        },
+      );
+      debugPrint('[AuthRepo] register status: ${response.statusCode}');
+      final data = response.data as Map<String, dynamic>;
+      final token = (data['access_token'] ?? data['token']) as String?;
+      if (token == null) throw 'El servidor no devolvió un token válido';
+      await _api.saveToken(token);
+      final userJson = (data['user'] as Map<String, dynamic>?) ?? data;
+      return UserModel.fromJson(userJson);
+    } on DioException catch (e) {
+      debugPrint('[AuthRepo] DioException register: ${e.response?.data}');
+      throw _parseError(e);
+    } catch (e) {
+      debugPrint('[AuthRepo] error inesperado en register: $e');
+      rethrow;
+    }
+  }
+
   /// POST /api/logout → elimina el token localmente y en el servidor
   Future<void> logout() async {
     try {

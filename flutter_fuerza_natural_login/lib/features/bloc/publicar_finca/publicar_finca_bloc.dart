@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_fuerza_natural_login/core/models/finca_model.dart';
 import 'package:flutter_fuerza_natural_login/core/services/fincas_repository.dart';
 
 part 'publicar_finca_event.dart';
@@ -12,6 +13,29 @@ class PublicarFincaBloc extends Bloc<PublicarFincaEvent, PublicarFincaState> {
   PublicarFincaBloc({FincasRepository? repo})
       : _repo = repo ?? FincasRepository(),
         super(const PublicarFincaState()) {
+    _registerHandlers();
+  }
+
+  /// Constructor for editing an existing finca — pre-populates state.
+  PublicarFincaBloc.editar(FincaModel finca, {FincasRepository? repo})
+      : _repo = repo ?? FincasRepository(),
+        super(PublicarFincaState(
+          fincaId: finca.id,
+          nombre: finca.nombre,
+          provincia: finca.provincia,
+          localidad: finca.localidad ?? '',
+          descripcion: finca.descripcion,
+          superficie: finca.superficie,
+          precioDia: finca.precioDia,
+          capacidad: 0,
+          especies: List.from(finca.especies),
+          servicios: List.from(finca.servicios),
+          normas: finca.normas.join('\n'),
+        )) {
+    _registerHandlers();
+  }
+
+  void _registerHandlers() {
     on<PublicarFincaIniciar>(_onIniciar);
     on<PublicarFincaSiguientePaso>(_onSiguientePaso);
     on<PublicarFincaAnteriorPaso>(_onAnteriorPaso);
@@ -128,7 +152,11 @@ class PublicarFincaBloc extends Bloc<PublicarFincaEvent, PublicarFincaState> {
         }
       }
 
-      await _repo.crearFincaFormData(formData);
+      if (state.fincaId != null) {
+        await _repo.actualizarFincaFormData(state.fincaId!, formData);
+      } else {
+        await _repo.crearFincaFormData(formData);
+      }
       emit(state.copyWith(publicando: false, publicada: true));
     } catch (err) {
       emit(state.copyWith(publicando: false, error: err.toString()));

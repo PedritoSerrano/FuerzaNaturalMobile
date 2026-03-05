@@ -211,10 +211,6 @@ class _DetalleFincaPageState extends State<DetalleFincaPage>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const TextSpan(
-                  text: ' por día',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                ),
               ],
             ),
           ),

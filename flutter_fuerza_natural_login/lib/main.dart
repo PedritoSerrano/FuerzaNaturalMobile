@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_fuerza_natural_login/core/services/api_service.dart';
 import 'package:flutter_fuerza_natural_login/features/bloc/auth/auth_bloc.dart';
 import 'package:flutter_fuerza_natural_login/features/bloc/navigation/navigation_bloc.dart';
 import 'package:flutter_fuerza_natural_login/features/ui/login_page.dart';
@@ -53,8 +55,35 @@ class FuerzaNaturalApp extends StatelessWidget {
 }
 
 /// Listens to AuthBloc and decides whether to show LoginPage or MainShell.
-class _AppRouter extends StatelessWidget {
+class _AppRouter extends StatefulWidget {
   const _AppRouter();
+
+  @override
+  State<_AppRouter> createState() => _AppRouterState();
+}
+
+class _AppRouterState extends State<_AppRouter> {
+  StreamSubscription<void>? _unauthorizedSub;
+  bool _forcingLogout = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _unauthorizedSub = ApiService().unauthorizedStream.listen((_) {
+      if (mounted && !_forcingLogout) {
+        _forcingLogout = true;
+        context.read<AuthBloc>().add(const AuthForceLogout());
+        // Reset flag tras unos ms para no bloquear futuros logouts
+        Future.delayed(const Duration(seconds: 2), () => _forcingLogout = false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _unauthorizedSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

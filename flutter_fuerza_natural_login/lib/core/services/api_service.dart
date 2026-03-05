@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -11,6 +12,11 @@ class ApiService {
   final _storage = const FlutterSecureStorage();
 
   static const _tokenKey = 'auth_token';
+
+  /// Emite un evento cada vez que el servidor responde con 401.
+  /// Úsalo para desloguear automáticamente al usuario eliminado.
+  final _unauthorizedController = StreamController<void>.broadcast();
+  Stream<void> get unauthorizedStream => _unauthorizedController.stream;
 
   ApiService._internal() {
     _dio = Dio(
@@ -36,13 +42,18 @@ class ApiService {
           debugPrint('[ApiService] <-- ${response.statusCode} ${response.requestOptions.uri}');
           return handler.next(response);
         },
-        onError: (DioException error, handler) {
+        onError: (DioException error, handler) async {
           debugPrint(
             '[ApiService] ERROR ${error.response?.statusCode ?? error.type.name} '
             '${error.requestOptions.uri}\n'
             '  message: ${error.message}\n'
             '  data: ${error.response?.data}',
           );
+          if (error.response?.statusCode == 401) {
+            debugPrint('[ApiService] 401 detectado → borrando token y notificando');
+            await _storage.delete(key: _tokenKey);
+            _unauthorizedController.add(null);
+          }
           return handler.next(error);
         },
       ),

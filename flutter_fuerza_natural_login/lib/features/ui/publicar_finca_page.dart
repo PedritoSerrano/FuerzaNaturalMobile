@@ -1,24 +1,30 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_fuerza_natural_login/core/models/finca_model.dart';
 import 'package:flutter_fuerza_natural_login/core/services/mock_data_service.dart';
 import 'package:flutter_fuerza_natural_login/features/bloc/publicar_finca/publicar_finca_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 class PublicarFincaPage extends StatelessWidget {
-  const PublicarFincaPage({super.key});
+  /// Pass [finca] to enter edit mode (pre-populates the form and PATCHes on save).
+  final FincaModel? finca;
+  const PublicarFincaPage({super.key, this.finca});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => PublicarFincaBloc(),
-      child: const _PublicarFincaView(),
+      create: (_) => finca != null
+          ? PublicarFincaBloc.editar(finca!)
+          : PublicarFincaBloc(),
+      child: _PublicarFincaView(editMode: finca != null),
     );
   }
 }
 
 class _PublicarFincaView extends StatelessWidget {
-  const _PublicarFincaView();
+  final bool editMode;
+  const _PublicarFincaView({this.editMode = false});
 
   static const _pasoLabels = [
     'Básico',
@@ -45,9 +51,11 @@ class _PublicarFincaView extends StatelessWidget {
         if (state.publicada) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('¡Finca publicada con éxito!'),
-                backgroundColor: Color(0xFF1e5a3a)),
+            SnackBar(
+                content: Text(editMode
+                    ? '¡Finca actualizada con éxito!'
+                    : '¡Finca publicada con éxito!'),
+                backgroundColor: const Color(0xFF1e5a3a)),
           );
         }
         if (state.error != null) {
@@ -112,9 +120,9 @@ class _PublicarFincaView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Publicar Finca',
-                      style: TextStyle(
+                    Text(
+                      editMode ? 'Editar Finca' : 'Publicar Finca',
+                      style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.bold),
@@ -251,7 +259,9 @@ class _PublicarFincaView extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      isLastStep ? 'Publicar finca' : 'Continuar',
+                      isLastStep
+                          ? (editMode ? 'Guardar cambios' : 'Publicar finca')
+                          : 'Continuar',
                       style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600),
@@ -357,9 +367,15 @@ class _PasoBasicoState extends State<_PasoBasico> {
                 horizontal: 14, vertical: 14),
           ),
           hint: const Text('Selecciona una provincia'),
-          items: MockDataService.provincias
-              .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-              .toList(),
+          items: [
+              ...MockDataService.provincias,
+              // Add the current value if it came from the backend and isn't in the standard list
+              if (_provincia != null &&
+                  !MockDataService.provincias.contains(_provincia))
+                _provincia!,
+            ]
+                .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                .toList(),
           onChanged: (v) {
             setState(() => _provincia = v);
             _update();
@@ -538,7 +554,31 @@ class _PasoEspecies extends StatelessWidget {
         const SizedBox(height: 4),
         const Text('Selecciona las especies disponibles',
             style: TextStyle(color: Colors.grey, fontSize: 14)),
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
+        // Aviso si no hay ninguna seleccionada
+        if (state.especies.isEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange.shade300),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, size: 16, color: Colors.orange),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Selecciona al menos una especie para continuar.',
+                    style: TextStyle(fontSize: 13, color: Colors.orange),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 8),
         Wrap(
           spacing: 10,
           runSpacing: 10,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_fuerza_natural_login/features/bloc/auth/auth_bloc.dart';
+import 'package:flutter_fuerza_natural_login/features/ui/register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,7 +14,6 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _rememberMe = false;
   bool _obscurePassword = true;
 
   @override
@@ -224,34 +224,6 @@ class _LoginPageState extends State<LoginPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(
-                                  children: [
-                                    SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: Checkbox(
-                                        value: _rememberMe,
-                                        onChanged: (value) => setState(
-                                          () => _rememberMe = value ?? false,
-                                        ),
-                                        activeColor: const Color(0xFF1e5a3a),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    const Text(
-                                      'Recordarme',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Color(0xFF6B7280),
-                                      ),
-                                    ),
-                                  ],
-                                ),
                                 TextButton(
                                   onPressed: () {},
                                   child: const Text(
@@ -343,44 +315,6 @@ class _LoginPageState extends State<LoginPage> {
                               ],
                             ),
                             const SizedBox(height: 24),
-
-                            // Continuar con Google
-                            OutlinedButton(
-                              onPressed: () {},
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                side: BorderSide(
-                                  color: Colors.grey[300]!,
-                                  width: 1.5,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Image(
-                                    image: AssetImage('shared/logoGoogle.png'),
-                                    height: 20,
-                                    width: 20,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Continuar con Google',
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: Color(0xFF374151),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-
                             // ¿No tienes cuenta?
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -393,7 +327,14 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 ),
                                 TextButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const RegisterPage(),
+                                      ),
+                                    );
+                                  },
                                   style: TextButton.styleFrom(
                                     padding: EdgeInsets.zero,
                                     minimumSize: const Size(0, 0),

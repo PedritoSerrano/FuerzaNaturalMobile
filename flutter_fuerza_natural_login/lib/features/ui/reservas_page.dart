@@ -27,9 +27,9 @@ class _ReservasView extends StatelessWidget {
           return RefreshIndicator(
             color: const Color(0xFF1e5a3a),
             onRefresh: () async {
-              context
-                  .read<MisReservasBloc>()
-                  .add(const MisReservasLoadRequested());
+              context.read<MisReservasBloc>().add(
+                const MisReservasLoadRequested(),
+              );
               // Espera a que el estado cambie de loading a otro
               await Future.delayed(const Duration(milliseconds: 600));
             },
@@ -41,7 +41,8 @@ class _ReservasView extends StatelessWidget {
                   const SliverFillRemaining(
                     child: Center(
                       child: CircularProgressIndicator(
-                          color: Color(0xFF1e5a3a)),
+                        color: Color(0xFF1e5a3a),
+                      ),
                     ),
                   )
                 else if (state is MisReservasLoaded) ...[
@@ -50,9 +51,9 @@ class _ReservasView extends StatelessWidget {
                 ] else if (state is MisReservasError)
                   SliverAppError(
                     mensaje: state.mensaje,
-                    onRetry: () => context
-                        .read<MisReservasBloc>()
-                        .add(const MisReservasLoadRequested()),
+                    onRetry: () => context.read<MisReservasBloc>().add(
+                      const MisReservasLoadRequested(),
+                    ),
                   ),
               ],
             ),
@@ -84,9 +85,10 @@ class _ReservasView extends StatelessWidget {
             const Text(
               'Mis Reservas',
               style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 4),
             const Text(
@@ -97,10 +99,7 @@ class _ReservasView extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _StatBox(
-                    value: activas.toString(),
-                    label: 'Activas',
-                  ),
+                  child: _StatBox(value: activas.toString(), label: 'Activas'),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -134,12 +133,14 @@ class _ReservasView extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: GestureDetector(
-                onTap: () => context
-                    .read<MisReservasBloc>()
-                    .add(MisReservasFiltrarPorEstado(f.$1)),
+                onTap: () => context.read<MisReservasBloc>().add(
+                  MisReservasFiltrarPorEstado(f.$1),
+                ),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 8),
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? const Color(0xFF1e5a3a)
@@ -202,14 +203,18 @@ class _StatBox extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold)),
-          Text(label,
-              style: const TextStyle(
-                  color: Color(0xFFB9F6CA), fontSize: 13)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            style: const TextStyle(color: Color(0xFFB9F6CA), fontSize: 13),
+          ),
         ],
       ),
     );
@@ -243,13 +248,11 @@ class _ReservaCardState extends State<_ReservaCard> {
     Color(0xFF3B5E3D),
   ];
 
-  bool get _puedeResenar =>
-      reserva.estado == EstadoReserva.completada;
+  bool get _puedeResenar => reserva.estado == EstadoReserva.completada;
 
   Color get _imgColor {
-    final idx = int.tryParse(
-            reserva.fincaId.replaceAll(RegExp(r'[^0-9]'), '')) ??
-        0;
+    final idx =
+        int.tryParse(reserva.fincaId.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
     return _colors[idx % _colors.length];
   }
 
@@ -283,16 +286,42 @@ class _ReservaCardState extends State<_ReservaCard> {
     }
   }
 
-  String _formatDate(DateTime d) =>
-      '${d.day} ${_month(d.month)} ${d.year}';
+  String _formatDate(DateTime d) => '${d.day} ${_month(d.month)} ${d.year}';
 
   String _month(int m) {
     const months = [
-      '', 'ene', 'feb', 'mar', 'abr', 'may', 'jun',
-      'jul', 'ago', 'sep', 'oct', 'nov', 'dic'
+      '',
+      'ene',
+      'feb',
+      'mar',
+      'abr',
+      'may',
+      'jun',
+      'jul',
+      'ago',
+      'sep',
+      'oct',
+      'nov',
+      'dic',
     ];
     return months[m];
   }
+
+  Widget _noPhoto() => Container(
+        width: 80,
+        height: 80,
+        color: _imgColor,
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.image_not_supported_outlined,
+                size: 22, color: Colors.white70),
+            SizedBox(height: 4),
+            Text('Sin foto',
+                style: TextStyle(color: Colors.white70, fontSize: 9)),
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -322,15 +351,16 @@ class _ReservaCardState extends State<_ReservaCard> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: Container(
+                      child: SizedBox(
                         width: 80,
                         height: 80,
-                        color: _imgColor,
-                        child: Center(
-                          child: Icon(Icons.landscape,
-                              size: 30,
-                              color: Colors.white.withValues(alpha: 0.4)),
-                        ),
+                        child: reserva.fincaImageUrl != null
+                            ? Image.network(
+                                reserva.fincaImageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => _noPhoto(),
+                              )
+                            : _noPhoto(),
                       ),
                     ),
                     Positioned(
@@ -338,7 +368,9 @@ class _ReservaCardState extends State<_ReservaCard> {
                       left: 0,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 3),
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: _estadoColor,
                           borderRadius: const BorderRadius.only(
@@ -374,60 +406,75 @@ class _ReservaCardState extends State<_ReservaCard> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.location_on,
-                              size: 13, color: Colors.grey),
+                          const Icon(
+                            Icons.location_on,
+                            size: 13,
+                            color: Colors.grey,
+                          ),
                           Text(
                             reserva.ubicacion,
                             style: const TextStyle(
-                                color: Colors.grey, fontSize: 12),
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.calendar_today,
-                              size: 13, color: Colors.black54),
+                          const Icon(
+                            Icons.calendar_today,
+                            size: 13,
+                            color: Colors.black54,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             _formatDate(reserva.fechaInicio),
                             style: const TextStyle(
-                                fontSize: 12, color: Colors.black54),
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.group,
-                              size: 13, color: Colors.black54),
+                          const Icon(
+                            Icons.group,
+                            size: 13,
+                            color: Colors.black54,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${reserva.numeroPersonas} personas',
                             style: const TextStyle(
-                                fontSize: 12, color: Colors.black54),
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
                           ),
-                          if (reserva.tipoReserva != null) ...
-                            [
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 7, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE8F5E9),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  ReservaModel.tipoLabel(
-                                      reserva.tipoReserva),
-                                  style: const TextStyle(
-                                    color: Color(0xFF1e5a3a),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          if (reserva.tipoReserva != null) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8F5E9),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                ReservaModel.tipoLabel(reserva.tipoReserva),
+                                style: const TextStyle(
+                                  color: Color(0xFF1e5a3a),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ],
+                            ),
+                          ],
                         ],
                       ),
                     ],
@@ -438,17 +485,17 @@ class _ReservaCardState extends State<_ReservaCard> {
           ),
           const Divider(height: 1),
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Total pagado',
-                        style:
-                            TextStyle(color: Colors.grey, fontSize: 11)),
+                    const Text(
+                      'Total pagado',
+                      style: TextStyle(color: Colors.grey, fontSize: 11),
+                    ),
                     Text(
                       '€${reserva.precioTotal.toStringAsFixed(0)}',
                       style: const TextStyle(
@@ -463,21 +510,29 @@ class _ReservaCardState extends State<_ReservaCard> {
                   _tieneValoracion
                       ? const Row(
                           children: [
-                            Icon(Icons.check_circle,
-                                color: Colors.green, size: 16),
+                            Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                              size: 16,
+                            ),
                             SizedBox(width: 4),
-                            Text('Reseñado',
-                                style: TextStyle(
-                                    color: Colors.green,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600)),
+                            Text(
+                              'Reseñado',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ],
                         )
                       : GestureDetector(
                           onTap: () => _mostrarSheetResena(context),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 8),
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFF1e5a3a),
                               borderRadius: BorderRadius.circular(20),
@@ -485,33 +540,24 @@ class _ReservaCardState extends State<_ReservaCard> {
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.star_border,
-                                    color: Colors.white, size: 15),
+                                Icon(
+                                  Icons.star_border,
+                                  color: Colors.white,
+                                  size: 15,
+                                ),
                                 SizedBox(width: 5),
-                                Text('Dejar reseña',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600)),
+                                Text(
+                                  'Dejar reseña',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                        )
-                else
-                  GestureDetector(
-                    onTap: () {},
-                    child: const Row(
-                      children: [
-                        Text('Ver detalles',
-                            style: TextStyle(
-                                color: Color(0xFF1e5a3a),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600)),
-                        Icon(Icons.chevron_right,
-                            color: Color(0xFF1e5a3a), size: 18),
-                      ],
-                    ),
-                  ),
+                        ),
               ],
             ),
           ),
@@ -535,7 +581,8 @@ class _ReservaCardState extends State<_ReservaCard> {
         },
       ),
     );
-  }}
+  }
+}
 
 // ─── Sheet: Dejar Reseña ──────────────────────────────────────
 class _DejarResenaSheet extends StatefulWidget {
@@ -571,7 +618,10 @@ class _DejarResenaSheetState extends State<_DejarResenaSheet> {
       setState(() => _error = 'Selecciona una puntuación');
       return;
     }
-    setState(() { _cargando = true; _error = null; });
+    setState(() {
+      _cargando = true;
+      _error = null;
+    });
     try {
       await _auth.crearValoracion(
         idReserva: widget.reservaId,
@@ -591,7 +641,10 @@ class _DejarResenaSheetState extends State<_DejarResenaSheet> {
         );
       }
     } catch (e) {
-      setState(() { _cargando = false; _error = e.toString(); });
+      setState(() {
+        _cargando = false;
+        _error = e.toString();
+      });
     }
   }
 
@@ -599,7 +652,8 @@ class _DejarResenaSheetState extends State<_DejarResenaSheet> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom),
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -612,29 +666,38 @@ class _DejarResenaSheetState extends State<_DejarResenaSheet> {
           children: [
             Center(
               child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2))),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
-            const Text('Dejar reseña',
-                style:
-                    TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text(
+              'Dejar reseña',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 4),
-            Text(widget.fincaNombre,
-                style: const TextStyle(
-                    color: Color(0xFF1e5a3a),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500)),
+            Text(
+              widget.fincaNombre,
+              style: const TextStyle(
+                color: Color(0xFF1e5a3a),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             const SizedBox(height: 20),
             // Estrellas
-            const Text('Puntuación',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black54)),
+            const Text(
+              'Puntuación',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.black54,
+              ),
+            ),
             const SizedBox(height: 8),
             Row(
               children: List.generate(
@@ -654,11 +717,14 @@ class _DejarResenaSheetState extends State<_DejarResenaSheet> {
             ),
             const SizedBox(height: 20),
             // Comentario
-            const Text('Comentario (opcional)',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black54)),
+            const Text(
+              'Comentario (opcional)',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.black54,
+              ),
+            ),
             const SizedBox(height: 8),
             TextField(
               controller: _comentarioCtrl,
@@ -667,18 +733,19 @@ class _DejarResenaSheetState extends State<_DejarResenaSheet> {
               decoration: InputDecoration(
                 hintText: 'Cuéntanos tu experiencia...',
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 filled: true,
                 fillColor: const Color(0xFFF5F5F5),
               ),
             ),
-            if (_error != null) ...
-              [
-                const SizedBox(height: 8),
-                Text(_error!,
-                    style: const TextStyle(
-                        color: Colors.red, fontSize: 13)),
-              ],
+            if (_error != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _error!,
+                style: const TextStyle(color: Colors.red, fontSize: 13),
+              ),
+            ],
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -689,18 +756,25 @@ class _DejarResenaSheetState extends State<_DejarResenaSheet> {
                   backgroundColor: const Color(0xFF1e5a3a),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: _cargando
                     ? const SizedBox(
                         width: 22,
                         height: 22,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : const Text('Enviar reseña',
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Enviar reseña',
                         style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold)),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ],

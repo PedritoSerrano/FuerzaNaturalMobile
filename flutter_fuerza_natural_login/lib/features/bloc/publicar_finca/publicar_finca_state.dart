@@ -2,6 +2,8 @@ part of 'publicar_finca_bloc.dart';
 
 class PublicarFincaState {
   final int paso; // 0-5
+  /// Non-null when editing an existing finca (triggers PATCH instead of POST)
+  final String? fincaId;
   final String nombre;
   final String provincia;
   final String localidad;
@@ -19,6 +21,7 @@ class PublicarFincaState {
 
   const PublicarFincaState({
     this.paso = 0,
+    this.fincaId,
     this.nombre = '',
     this.provincia = '',
     this.localidad = '',
@@ -37,8 +40,19 @@ class PublicarFincaState {
 
   static const int totalPasos = 6;
 
-  // Always allow advancing between steps; final validation on Publicar.
-  bool get pasoValido => true;
+  /// Valida el paso actual antes de avanzar al siguiente.
+  bool get pasoValido {
+    switch (paso) {
+      case 0: // Básico
+        return nombre.trim().isNotEmpty &&
+            provincia.isNotEmpty &&
+            descripcion.trim().length >= 20;
+      case 2: // Especies — al menos una
+        return especies.isNotEmpty;
+      default:
+        return true;
+    }
+  }
 
   bool get datosCompletos =>
       nombre.trim().isNotEmpty &&
@@ -48,6 +62,7 @@ class PublicarFincaState {
 
   PublicarFincaState copyWith({
     int? paso,
+    String? fincaId,
     String? nombre,
     String? provincia,
     String? localidad,
@@ -65,6 +80,7 @@ class PublicarFincaState {
   }) {
     return PublicarFincaState(
       paso: paso ?? this.paso,
+      fincaId: fincaId ?? this.fincaId,
       nombre: nombre ?? this.nombre,
       provincia: provincia ?? this.provincia,
       localidad: localidad ?? this.localidad,
