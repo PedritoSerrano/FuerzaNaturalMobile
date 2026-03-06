@@ -93,7 +93,7 @@ class _RegisterPageState extends State<RegisterPage> {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthAuthenticated) {
-          // Éxito: el Navigator se encargará de volver al flujo principal
+          
           Navigator.pop(context);
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -120,7 +120,7 @@ class _RegisterPageState extends State<RegisterPage> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Column(
                 children: [
-                  // Logo
+                  
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -145,7 +145,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   const SizedBox(height: 28),
 
-                  // Card formulario
+                  
                   Container(
                     constraints: const BoxConstraints(maxWidth: 400),
                     padding: const EdgeInsets.all(28),
@@ -188,7 +188,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               const SizedBox(height: 28),
 
-                              // Nombre
+                              
                               _label('Nombre'),
                               TextFormField(
                                 controller: _nombreCtrl,
@@ -205,7 +205,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               const SizedBox(height: 16),
 
-                              // Apellidos
+                              
                               _label('Apellidos'),
                               TextFormField(
                                 controller: _apellidosCtrl,
@@ -218,7 +218,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               const SizedBox(height: 16),
 
-                              // Email
+                              
                               _label('Email'),
                               TextFormField(
                                 controller: _emailCtrl,
@@ -238,7 +238,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               const SizedBox(height: 16),
 
-                              // Contraseña
+                              
                               _label('Contraseña'),
                               TextFormField(
                                 controller: _passwordCtrl,
@@ -271,7 +271,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               const SizedBox(height: 16),
 
-                              // Confirmar contraseña
+                              
                               _label('Confirmar contraseña'),
                               TextFormField(
                                 controller: _confirmCtrl,
@@ -305,7 +305,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               const SizedBox(height: 28),
 
-                              // Botón Crear cuenta
+                              
                               ElevatedButton(
                                 onPressed: isLoading ? null : _submit,
                                 style: ElevatedButton.styleFrom(
@@ -349,7 +349,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               const SizedBox(height: 20),
 
-                              // ¿Ya tienes cuenta?
+                              
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [

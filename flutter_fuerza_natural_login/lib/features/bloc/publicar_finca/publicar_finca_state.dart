@@ -1,8 +1,8 @@
 part of 'publicar_finca_bloc.dart';
 
 class PublicarFincaState {
-  final int paso; // 0-5
-  /// Non-null when editing an existing finca (triggers PATCH instead of POST)
+  final int paso; 
+  
   final String? fincaId;
   final String nombre;
   final String provincia;
@@ -14,7 +14,7 @@ class PublicarFincaState {
   final List<String> especies;
   final List<String> servicios;
   final String normas;
-  final List<String> fotos; // local file paths
+  final List<String> fotos; 
   final bool publicando;
   final bool publicada;
   final String? error;
@@ -40,14 +40,14 @@ class PublicarFincaState {
 
   static const int totalPasos = 6;
 
-  /// Valida el paso actual antes de avanzar al siguiente.
+  
   bool get pasoValido {
     switch (paso) {
-      case 0: // Básico
+      case 0: 
         return nombre.trim().isNotEmpty &&
             provincia.isNotEmpty &&
             descripcion.trim().length >= 20;
-      case 2: // Especies — al menos una
+      case 2: 
         return especies.isNotEmpty;
       default:
         return true;

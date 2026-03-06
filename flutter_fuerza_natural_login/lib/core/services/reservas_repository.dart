@@ -17,7 +17,7 @@ class ReservasRepository {
     return [];
   }
 
-  /// GET /api/mis-reservas
+  
   Future<List<ReservaModel>> getMisReservas() async {
     try {
       final response = await _api.get(ApiConfig.misReservas);
@@ -32,7 +32,7 @@ class ReservasRepository {
     }
   }
 
-  /// GET /api/mis-reservas/{id}
+  
   Future<ReservaModel> getReserva(String id) async {
     try {
       final response = await _api.get(ApiConfig.reservaDetalle(id));
@@ -48,7 +48,7 @@ class ReservasRepository {
     }
   }
 
-  /// POST /api/mis-reservas  { finca_id, fecha, tipo_reserva, numero_personas }
+  
   Future<ReservaModel> crearReserva({
     required String fincaId,
     required DateTime fecha,

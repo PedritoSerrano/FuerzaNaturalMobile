@@ -7,7 +7,7 @@ import 'package:flutter_fuerza_natural_login/core/services/api_service.dart';
 class FincasRepository {
   final _api = ApiService();
 
-  /// Extracts a list from any API response shape.
+  
   static List _extractList(dynamic data, [List<String> keys = const ['data', 'fincas']]) {
     if (data is List) return data;
     if (data is Map) {
@@ -18,7 +18,7 @@ class FincasRepository {
     return [];
   }
 
-  /// GET /api/fincas?search=&provincia=
+  
   Future<List<FincaModel>> getFincas({String? search, String? provincia}) async {
     try {
       final Map<String, dynamic> params = {};
@@ -26,7 +26,6 @@ class FincasRepository {
       if (provincia != null && provincia.isNotEmpty) params['provincia'] = provincia;
 
       final response = await _api.get(ApiConfig.fincas, queryParameters: params.isEmpty ? null : params);
-      debugPrint('[FincasRepo] GET fincas status: ${response.statusCode}');
       final list = _extractList(response.data);
       return list.map((e) => FincaModel.fromJson(e as Map<String, dynamic>)).toList();
     } on DioException catch (e) {
@@ -37,13 +36,12 @@ class FincasRepository {
     }
   }
 
-  /// GET /api/fincas?destacada=1
+  
   Future<List<FincaModel>> getFincasDestacadas() async {
     try {
       final response = await _api.get(ApiConfig.fincas, queryParameters: {'destacada': 1});
-      debugPrint('[FincasRepo] GET fincas destacadas status: ${response.statusCode}');
       final list = _extractList(response.data);
-      // If no dedicated "destacada" filter, fall back to filtering client-side
+      
       final fincas = list.map((e) => FincaModel.fromJson(e as Map<String, dynamic>)).toList();
       return fincas.where((f) => f.destacada).toList();
     } on DioException catch (e) {
@@ -54,7 +52,7 @@ class FincasRepository {
     }
   }
 
-  /// GET /api/fincas/{id}
+  
   Future<FincaModel> getFinca(String id) async {
     try {
       final response = await _api.get(ApiConfig.fincaDetalle(id));
@@ -71,13 +69,12 @@ class FincasRepository {
     }
   }
 
-  // ── Mis fincas (propietario) ───────────────────────────────────────────────
+  
 
-  /// GET /api/mis-fincas
+  
   Future<List<FincaModel>> getMisFincas() async {
     try {
       final response = await _api.get(ApiConfig.misFincas);
-      debugPrint('[FincasRepo] GET mis-fincas status: ${response.statusCode}');
       final list = _extractList(response.data);
       return list.map((e) => FincaModel.fromJson(e as Map<String, dynamic>)).toList();
     } on DioException catch (e) {
@@ -88,7 +85,7 @@ class FincasRepository {
     }
   }
 
-  /// POST /api/mis-fincas (multipart, for photo uploads)
+  
   Future<FincaModel> crearFincaFormData(FormData formData) async {
     try {
       final response = await _api.postFormData(ApiConfig.misFincas, data: formData);
@@ -104,7 +101,7 @@ class FincasRepository {
     }
   }
 
-  /// POST /api/mis-fincas (JSON payload, no files)
+  
   Future<FincaModel> crearFinca(Map<String, dynamic> payload) async {
     try {
       final response = await _api.post(ApiConfig.misFincas, data: payload);
@@ -120,7 +117,7 @@ class FincasRepository {
     }
   }
 
-  /// PATCH /api/mis-fincas/{id}  (update finca data + optional new photos)
+  
   Future<FincaModel> actualizarFincaFormData(String id, FormData formData) async {
     try {
       final response = await _api.patchFormData(ApiConfig.miFincaDetalle(id), data: formData);
@@ -136,7 +133,7 @@ class FincasRepository {
     }
   }
 
-  /// PATCH /api/mis-fincas/{id}  (append new photos)
+  
   Future<FincaModel> agregarFotosFinca(String id, List<String> fotoPaths) async {
     try {
       final form = FormData();
@@ -158,7 +155,7 @@ class FincasRepository {
     }
   }
 
-  /// PATCH /api/mis-fincas/{id}/estado
+  
   Future<void> cambiarEstado(String id, String estado) async {
     try {
       await _api.patch(ApiConfig.miFincaEstado(id), data: {'estado': estado});
@@ -169,7 +166,7 @@ class FincasRepository {
     }
   }
 
-  /// DELETE /api/mis-fincas/{id}
+  
   Future<void> eliminarFinca(String id) async {
     try {
       await _api.delete(ApiConfig.miFincaDetalle(id));

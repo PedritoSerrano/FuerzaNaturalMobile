@@ -22,11 +22,13 @@ class ExplorarBloc extends Bloc<ExplorarEvent, ExplorarState> {
     ExplorarLoadRequested event,
     Emitter<ExplorarState> emit,
   ) async {
-    // Preserve existing filters if already loaded
+    
     final previous = state is ExplorarLoaded ? state as ExplorarLoaded : null;
     emit(const ExplorarLoading());
     try {
-      final todas = (await _repo.getFincas())
+      final raw = await _repo.getFincas();
+      final todas = raw
+          .where((f) => f.estado == EstadoFinca.activa)
           .where((f) => currentUserId == null || f.propietarioId != currentUserId)
           .toList();
       final provincia = previous?.filtroProvincias;
@@ -53,7 +55,7 @@ class ExplorarBloc extends Bloc<ExplorarEvent, ExplorarState> {
     }
   }
 
-  /// Applies search + filters to [base] list.
+  
   List<FincaModel> _apply(
     List<FincaModel> base, {
     required String query,

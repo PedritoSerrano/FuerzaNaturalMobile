@@ -13,8 +13,8 @@ class ApiService {
 
   static const _tokenKey = 'auth_token';
 
-  /// Emite un evento cada vez que el servidor responde con 401.
-  /// Úsalo para desloguear automáticamente al usuario eliminado.
+  
+  
   final _unauthorizedController = StreamController<void>.broadcast();
   Stream<void> get unauthorizedStream => _unauthorizedController.stream;
 
@@ -60,7 +60,7 @@ class ApiService {
     );
   }
 
-  // ── Token management ──────────────────────────────────────────────────────
+  
   Future<void> saveToken(String token) =>
       _storage.write(key: _tokenKey, value: token);
 
@@ -70,7 +70,7 @@ class ApiService {
 
   Future<bool> hasToken() async => (await _storage.read(key: _tokenKey)) != null;
 
-  // ── HTTP helpers ──────────────────────────────────────────────────────────
+  
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) =>
       _dio.get(path, queryParameters: queryParameters);
 

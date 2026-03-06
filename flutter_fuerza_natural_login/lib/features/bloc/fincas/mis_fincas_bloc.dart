@@ -34,7 +34,7 @@ class MisFincasBloc extends Bloc<MisFincasEvent, MisFincasState> {
   Future<void> _onPausar(MisFincasPausarFinca event, Emitter<MisFincasState> emit) async {
     final current = state;
     if (current is! MisFincasLoaded) return;
-    // Optimistic update
+    
     final updated = current.fincas
         .map((f) => f.id == event.fincaId ? f.copyWith(estado: EstadoFinca.pausada) : f)
         .toList();
@@ -42,7 +42,7 @@ class MisFincasBloc extends Bloc<MisFincasEvent, MisFincasState> {
     try {
       await _repo.cambiarEstado(event.fincaId, 'pausada');
     } catch (_) {
-      // revert on error
+      
       emit(MisFincasLoaded(current.fincas));
     }
   }
@@ -92,7 +92,7 @@ class MisFincasBloc extends Bloc<MisFincasEvent, MisFincasState> {
         emit(MisFincasLoaded(list));
       }
     } catch (_) {
-      // silently ignore — photos were saved on the backend
+      
     }
   }
 

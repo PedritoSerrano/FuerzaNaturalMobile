@@ -177,7 +177,6 @@ class _MisFincasView extends StatelessWidget {
   }
 }
 
-// ─── Mini stat ─────────────────────────────────────────────────
 class _MiniStat extends StatelessWidget {
   final String value;
   final String label;
@@ -200,7 +199,6 @@ class _MiniStat extends StatelessWidget {
   }
 }
 
-// ─── Mi Finca Card ─────────────────────────────────────────────
 class _MiFincaCard extends StatelessWidget {
   final FincaModel finca;
   const _MiFincaCard({required this.finca});
@@ -248,7 +246,7 @@ class _MiFincaCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
+          
           ClipRRect(
             borderRadius:
                 const BorderRadius.vertical(top: Radius.circular(16)),
@@ -279,7 +277,7 @@ class _MiFincaCard extends StatelessWidget {
                           ),
                         ),
                 ),
-                // Estado badge
+                
                 Positioned(
                   top: 12,
                   left: 12,
@@ -313,7 +311,7 @@ class _MiFincaCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Reservas pendientes badge
+                
                 if (finca.reservasPendientes > 0)
                   Positioned(
                     top: 12,
@@ -342,7 +340,7 @@ class _MiFincaCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                // Name over image
+                
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -390,7 +388,7 @@ class _MiFincaCard extends StatelessWidget {
             ),
           ),
 
-          // Details
+          
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
             child: Row(
@@ -426,7 +424,7 @@ class _MiFincaCard extends StatelessWidget {
             ),
           ),
 
-          // Action buttons
+          
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 4, 14, 14),
             child: Row(
@@ -579,7 +577,6 @@ class _ActionBtn extends StatelessWidget {
   }
 }
 
-// ─── Gestión de fotos sheet ────────────────────────────────────────────────
 class _GestionFotosSheet extends StatefulWidget {
   final FincaModel finca;
   const _GestionFotosSheet({required this.finca});
@@ -638,7 +635,7 @@ class _GestionFotosSheetState extends State<_GestionFotosSheet> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle
+            
             Container(
               margin: const EdgeInsets.only(top: 12),
               width: 40,

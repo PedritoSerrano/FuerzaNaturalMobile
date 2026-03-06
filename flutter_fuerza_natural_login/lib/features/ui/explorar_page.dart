@@ -10,7 +10,7 @@ class ExplorarPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ExplorarBloc is provided by MainShell
+    
     return const _ExplorarView();
   }
 }
@@ -41,7 +41,7 @@ class _ExplorarViewState extends State<_ExplorarView> {
             color: const Color(0xFF1e5a3a),
             onRefresh: () async {
               context.read<ExplorarBloc>().add(const ExplorarLoadRequested());
-              // Wait until no longer loading
+              
               await context.read<ExplorarBloc>().stream.firstWhere(
                     (s) => s is! ExplorarLoading,
                   );
@@ -133,7 +133,7 @@ class _ExplorarViewState extends State<_ExplorarView> {
               ),
             ),
           ),
-          // Filter button with active badge
+          
           BlocBuilder<ExplorarBloc, ExplorarState>(
             builder: (context, state) {
               final hayFiltros =
@@ -249,9 +249,6 @@ class _ExplorarViewState extends State<_ExplorarView> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Finca Card
-// ─────────────────────────────────────────────────────────────
 class _FincaCardVertical extends StatelessWidget {
   final FincaModel finca;
 
@@ -312,7 +309,7 @@ class _FincaCardVertical extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
+            
             ClipRRect(
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(16)),
@@ -361,7 +358,7 @@ class _FincaCardVertical extends StatelessWidget {
                         ),
                       ),
                     ),
-                  // Finca name over image
+                  
                   Positioned(
                     bottom: 0,
                     left: 0,
@@ -410,7 +407,7 @@ class _FincaCardVertical extends StatelessWidget {
               ),
             ),
 
-            // Details
+            
             Padding(
               padding: const EdgeInsets.all(14),
               child: Column(
@@ -563,7 +560,6 @@ class _EspecieChip extends StatelessWidget {
   }
 }
 
-// ─── Filtros bottom sheet ──────────────────────────────────────────────────
 class _FiltrosSheet extends StatefulWidget {
   final String initialProvincia;
   final double initialMaxPrecio;
@@ -635,7 +631,7 @@ class _FiltrosSheetState extends State<_FiltrosSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle
+              
               Center(
                 child: Container(
                   width: 40,
@@ -662,7 +658,7 @@ class _FiltrosSheetState extends State<_FiltrosSheet> {
               ),
               const SizedBox(height: 16),
 
-              // Provincia
+              
               const Text('Provincia',
                   style: TextStyle(
                       fontWeight: FontWeight.w600, fontSize: 14)),
@@ -685,7 +681,7 @@ class _FiltrosSheetState extends State<_FiltrosSheet> {
               ),
               const SizedBox(height: 20),
 
-              // Precio máximo
+              
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -713,7 +709,7 @@ class _FiltrosSheetState extends State<_FiltrosSheet> {
               ),
               const SizedBox(height: 12),
 
-              // Superficie mínima
+              
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -741,7 +737,7 @@ class _FiltrosSheetState extends State<_FiltrosSheet> {
               ),
               const SizedBox(height: 20),
 
-              // Apply button
+              
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

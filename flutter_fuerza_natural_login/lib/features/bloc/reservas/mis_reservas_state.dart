@@ -15,7 +15,7 @@ class MisReservasLoading extends MisReservasState {
 class MisReservasLoaded extends MisReservasState {
   final List<ReservaModel> todas;
   final List<ReservaModel> mostradas;
-  final String filtroActivo; // 'todas', 'activas', 'pasadas'
+  final String filtroActivo; 
 
   const MisReservasLoaded({
     required this.todas,

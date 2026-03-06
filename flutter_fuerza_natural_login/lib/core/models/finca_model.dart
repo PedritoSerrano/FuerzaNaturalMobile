@@ -1,4 +1,3 @@
-// ignore_for_file: depend_on_referenced_packages
 import 'package:flutter_fuerza_natural_login/core/config/api_config.dart';
 
 enum EstadoFinca { activa, pausada, inactiva }
@@ -10,7 +9,7 @@ class FincaModel {
   final String provincia;
   final String pais;
   final String? localidad;
-  final double superficie; // hectáreas
+  final double superficie; 
   final double precioDia;
   final double valoracion;
   final int numeroResenas;
@@ -50,7 +49,7 @@ class FincaModel {
 
   String get ubicacion => '$provincia, $pais';
 
-  // ── Parsing helpers ────────────────────────────────────────────────────────
+  
   static double _d(dynamic v) =>
       (num.tryParse(v?.toString() ?? '') ?? 0).toDouble();
 
@@ -64,26 +63,30 @@ class FincaModel {
     return s == '1' || s == 'true' || s == 'yes';
   }
 
-  /// Handles JSON arrays, comma-separated strings, newline-separated strings, or null.
+  
   static List<String> _list(dynamic v) {
     if (v == null) return [];
     if (v is List) return v.map((e) => e.toString()).toList();
     if (v is String && v.isNotEmpty) {
-      // Split by newline or comma (covers both normas typed in a textarea and CSV lists)
+      
       return v.split(RegExp(r'[,\n]')).map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
     }
     return [];
   }
 
   static EstadoFinca _parseEstado(dynamic v) {
-    final s = v?.toString().toLowerCase() ?? '';
-    if (s == 'activa' || s == 'activo' || s == 'active') return EstadoFinca.activa;
-    if (s == 'pausada' || s == 'paused') return EstadoFinca.pausada;
-    if (s == 'inactiva' || s == 'inactivo' || s == 'inactive') return EstadoFinca.inactiva;
-    return EstadoFinca.activa;
+    if (v == null) return EstadoFinca.activa;
+    final s = v.toString().toLowerCase().trim();
+    if (s.isEmpty) return EstadoFinca.activa;
+    if (s == 'activa' || s == 'activo' || s == 'active' || s == '1' || s == 'true')
+      return EstadoFinca.activa;
+    if (s == 'pausada' || s == 'pausado' || s == 'paused') return EstadoFinca.pausada;
+    if (s == 'inactiva' || s == 'inactivo' || s == 'inactive' || s == '0' || s == 'false')
+      return EstadoFinca.inactiva;
+    return EstadoFinca.inactiva;
   }
 
-  /// Extracts provincia and pais from a combined 'ubicacion' string like "Sevilla, España"
+  
   static _Ubicacion _parseUbicacion(dynamic ubicacion, dynamic provincia, dynamic pais) {
     final uStr = ubicacion?.toString() ?? '';
     final provStr = (provincia ?? '').toString();
@@ -94,21 +97,34 @@ class FincaModel {
     return _Ubicacion(parts.isNotEmpty ? parts[0] : uStr, parts.length > 1 ? parts[1] : 'España');
   }
 
-  /// Builds the full list of image URLs from the backend 'imagenes' array.
+  
+  
+  
+  static String _fixImageUrl(String url) {
+    if (url.isEmpty) return url;
+    final base = ApiConfig.baseUrl.replaceAll('/api', ''); 
+    return url
+        .replaceFirst(RegExp(r'https?://localhost(:\d+)?'), base)
+        .replaceFirst(RegExp(r'https?://127\.0\.0\.1(:\d+)?'), base);
+  }
+
+  
   static List<String> _parseImagenes(dynamic imagenes) {
     final base = ApiConfig.baseUrl.replaceAll('/api', '');
     if (imagenes is! List) return [];
     return imagenes
         .map((e) {
           final s = e.toString();
-          return s.startsWith('/') ? base + s : s;
+          if (s.isEmpty) return '';
+          if (s.startsWith('/')) return base + s;
+          return _fixImageUrl(s);
         })
         .where((s) => s.isNotEmpty)
         .toList();
   }
 
-  /// Gets first image string from 'imagenes' array or any image field.
-  /// Prepends the backend host URL if the path is relative (starts with '/').
+  
+  
   static String? _firstImage(dynamic imagenes, dynamic imageUrl, dynamic imageUrlAlt) {
     String? raw;
     if (imageUrl != null && imageUrl.toString().isNotEmpty) raw = imageUrl.toString();
@@ -119,7 +135,7 @@ class FincaModel {
     if (raw.startsWith('/')) {
       return ApiConfig.baseUrl.replaceAll('/api', '') + raw;
     }
-    return raw;
+    return _fixImageUrl(raw);
   }
 
   factory FincaModel.fromJson(Map<String, dynamic> json) {
@@ -131,21 +147,20 @@ class FincaModel {
       provincia: ub.provincia,
       pais: ub.pais,
       localidad: json['localidad']?.toString(),
-      // Backend uses 'extension'; fallback to 'superficie'
+      
       superficie: _d(json['extension'] ?? json['superficie']),
-      // Backend uses 'precio_base'; fallback to 'precio_dia'
+      
       precioDia: _d(json['precio_base'] ?? json['precio_dia'] ?? json['precioDia']),
       valoracion: _d(json['valoracion_avg'] ?? json['valoracion']),
       numeroResenas: _i(json['valoracion_count'] ?? json['numeroResenas'] ?? json['numero_resenas']),
       especies: _list(json['especies']),
       servicios: _list(json['servicios']),
       normas: _list(json['normas']),
-      // Backend uses 'imagenes' (array); fallback to imageUrl fields
+      
       imagenes: _parseImagenes(json['imagenes']),
       imageUrl: _firstImage(json['imagenes'], json['imageUrl'], json['image_url']),
       destacada: _b(json['destacada']),
-      estado: _parseEstado(json['estado']),
-      // Backend uses 'id_propietario'
+      estado: _parseEstado(json['estado'] ?? json['status']),
       propietarioId: (json['id_propietario'] ?? json['propietarioId'] ?? json['user_id'] ?? json['owner_id'] ?? '0').toString(),
       totalReservas: _i(json['total_eventos'] ?? json['totalReservas'] ?? json['total_reservas']),
       reservasPendientes: _i(json['reservasPendientes'] ?? json['reservas_pendientes']),
@@ -222,7 +237,6 @@ class FincaModel {
   }
 }
 
-/// Internal helper for parsing combined ubicacion strings.
 class _Ubicacion {
   final String provincia;
   final String pais;

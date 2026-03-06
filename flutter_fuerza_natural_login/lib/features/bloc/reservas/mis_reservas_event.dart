@@ -9,6 +9,6 @@ class MisReservasLoadRequested extends MisReservasEvent {
 }
 
 class MisReservasFiltrarPorEstado extends MisReservasEvent {
-  final String filtro; // 'todas', 'activas', 'pasadas'
+  final String filtro; 
   const MisReservasFiltrarPorEstado(this.filtro);
 }

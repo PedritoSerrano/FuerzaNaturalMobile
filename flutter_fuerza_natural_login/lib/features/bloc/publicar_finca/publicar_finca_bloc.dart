@@ -16,7 +16,7 @@ class PublicarFincaBloc extends Bloc<PublicarFincaEvent, PublicarFincaState> {
     _registerHandlers();
   }
 
-  /// Constructor for editing an existing finca — pre-populates state.
+  
   PublicarFincaBloc.editar(FincaModel finca, {FincasRepository? repo})
       : _repo = repo ?? FincasRepository(),
         super(PublicarFincaState(
@@ -114,23 +114,23 @@ class PublicarFincaBloc extends Bloc<PublicarFincaEvent, PublicarFincaState> {
     }
     emit(state.copyWith(publicando: true, error: null));
     try {
-      // Build ubicacion string from province + locality
+      
       final ubicacion = [state.localidad, state.provincia]
           .where((s) => s.isNotEmpty)
           .join(', ');
 
-      // Build multipart form data so photos can be uploaded as files
+      
       final formData = FormData.fromMap({
         'nombre': state.nombre,
         'ubicacion': ubicacion,
         'provincia': state.provincia,
         'localidad': state.localidad,
         'descripcion': state.descripcion,
-        // Map Flutter field names → Laravel DB column names
+        
         'extension': state.superficie,
-        'superficie': state.superficie, // fallback
+        'superficie': state.superficie, 
         'precio_base': state.precioDia,
-        'precio_dia': state.precioDia, // fallback
+        'precio_dia': state.precioDia, 
         'capacidad': state.capacidad,
         'especies': state.especies.join(','),
         'servicios': state.servicios.join(','),
@@ -138,7 +138,7 @@ class PublicarFincaBloc extends Bloc<PublicarFincaEvent, PublicarFincaState> {
         'estado': 'activa',
       });
 
-      // Attach photo files (if any)
+      
       for (int i = 0; i < state.fotos.length; i++) {
         final file = File(state.fotos[i]);
         if (await file.exists()) {

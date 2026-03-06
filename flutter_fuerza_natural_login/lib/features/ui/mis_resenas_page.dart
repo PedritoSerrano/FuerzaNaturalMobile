@@ -99,7 +99,6 @@ class _MisResenasPageState extends State<MisResenasPage> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 class _ResenaData {
   final int puntuacion;
   final String? comentario;

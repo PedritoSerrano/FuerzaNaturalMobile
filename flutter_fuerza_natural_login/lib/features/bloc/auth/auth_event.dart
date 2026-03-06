@@ -31,7 +31,6 @@ class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
 
-/// Forzar cierre de sesión sin llamar a la API (usuario eliminado externamente).
 class AuthForceLogout extends AuthEvent {
   const AuthForceLogout();
 }

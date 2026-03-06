@@ -31,7 +31,7 @@ class MainShell extends StatelessWidget {
       child: BlocListener<NavigationBloc, NavigationState>(
         listenWhen: (prev, curr) => prev.currentIndex != curr.currentIndex,
         listener: (context, state) {
-          // Reload the page that just became visible
+          
           switch (state.currentIndex) {
             case 0:
               context

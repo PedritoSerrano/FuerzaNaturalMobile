@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Widget reutilizable para mostrar errores con opción de reintentar.
 class AppErrorWidget extends StatelessWidget {
   final String mensaje;
   final VoidCallback? onRetry;
@@ -76,7 +75,6 @@ class AppErrorWidget extends StatelessWidget {
   }
 }
 
-/// Envuelve AppErrorWidget en un SliverFillRemaining para usar dentro de CustomScrollView.
 class SliverAppError extends StatelessWidget {
   final String mensaje;
   final VoidCallback? onRetry;

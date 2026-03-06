@@ -7,7 +7,7 @@ import 'package:flutter_fuerza_natural_login/features/bloc/publicar_finca/public
 import 'package:image_picker/image_picker.dart';
 
 class PublicarFincaPage extends StatelessWidget {
-  /// Pass [finca] to enter edit mode (pre-populates the form and PATCHes on save).
+  
   final FincaModel? finca;
   const PublicarFincaPage({super.key, this.finca});
 
@@ -138,7 +138,7 @@ class _PublicarFincaView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          // Step indicators
+          
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(PublicarFincaState.totalPasos, (i) {
@@ -212,10 +212,33 @@ class _PublicarFincaView extends StatelessWidget {
     }
   }
 
+  List<String> _validationMessages(PublicarFincaState state) {
+    if (state.pasoValido) return [];
+    switch (state.paso) {
+      case 0:
+        final msgs = <String>[];
+        if (state.nombre.trim().isEmpty)
+          msgs.add('Escribe el nombre de la finca');
+        if (state.provincia.isEmpty)
+          msgs.add('Selecciona una provincia');
+        if (state.descripcion.trim().length < 20) {
+          final chars = state.descripcion.trim().length;
+          msgs.add(
+              'Descripción demasiado corta ($chars/20 caracteres mínimo)');
+        }
+        return msgs;
+      case 2:
+        return ['Selecciona al menos una especie de caza'];
+      default:
+        return [];
+    }
+  }
+
   Widget _buildBottomBar(
       BuildContext context, PublicarFincaState state) {
     final isLastStep =
         state.paso == PublicarFincaState.totalPasos - 1;
+    final msgs = _validationMessages(state);
     return Container(
       padding: EdgeInsets.fromLTRB(
           20, 12, 20, MediaQuery.of(context).padding.bottom + 12),
@@ -224,9 +247,50 @@ class _PublicarFincaView extends StatelessWidget {
         border: Border(
             top: BorderSide(color: Color(0xFFE0E0E0))),
       ),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (msgs.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 12, vertical: 8),
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.shade300),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: msgs
+                    .map(
+                      (msg) => Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.info_outline,
+                                size: 14, color: Colors.orange),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                msg,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.orange),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
           onPressed: state.pasoValido
               ? () {
                   if (isLastStep) {
@@ -274,13 +338,14 @@ class _PublicarFincaView extends StatelessWidget {
                         size: 20),
                   ],
                 ),
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-// ─── Paso 1: Básico ───────────────────────────────────────────
 class _PasoBasico extends StatefulWidget {
   final PublicarFincaState state;
   const _PasoBasico({required this.state});
@@ -369,7 +434,7 @@ class _PasoBasicoState extends State<_PasoBasico> {
           hint: const Text('Selecciona una provincia'),
           items: [
               ...MockDataService.provincias,
-              // Add the current value if it came from the backend and isn't in the standard list
+              
               if (_provincia != null &&
                   !MockDataService.provincias.contains(_provincia))
                 _provincia!,
@@ -404,11 +469,21 @@ class _PasoBasicoState extends State<_PasoBasico> {
           children: [
             _FieldLabel(text: 'Descripción', required: true),
             BlocBuilder<PublicarFincaBloc, PublicarFincaState>(
-              builder: (_, st) => Text(
-                '${st.descripcion.length} / 500 caracteres',
-                style: const TextStyle(
-                    color: Colors.grey, fontSize: 11),
-              ),
+              builder: (_, st) {
+                final trimmed = st.descripcion.trim().length;
+                final meetsMin = trimmed >= 20;
+                return Text(
+                  meetsMin
+                      ? '${st.descripcion.length}/500 ✓'
+                      : '$trimmed/20 mínimo',
+                  style: TextStyle(
+                      color: meetsMin
+                          ? Colors.green.shade700
+                          : Colors.orange.shade700,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500),
+                );
+              },
             ),
           ],
         ),
@@ -440,7 +515,6 @@ class _PasoBasicoState extends State<_PasoBasico> {
   }
 }
 
-// ─── Paso 2: Detalles ─────────────────────────────────────────
 class _PasoDetalles extends StatefulWidget {
   final PublicarFincaState state;
   const _PasoDetalles({required this.state});
@@ -532,7 +606,6 @@ class _PasoDetallesState extends State<_PasoDetalles> {
   }
 }
 
-// ─── Paso 3: Especies ─────────────────────────────────────────
 class _PasoEspecies extends StatelessWidget {
   final PublicarFincaState state;
   const _PasoEspecies({required this.state});
@@ -555,7 +628,7 @@ class _PasoEspecies extends StatelessWidget {
         const Text('Selecciona las especies disponibles',
             style: TextStyle(color: Colors.grey, fontSize: 14)),
         const SizedBox(height: 8),
-        // Aviso si no hay ninguna seleccionada
+        
         if (state.especies.isEmpty)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -640,7 +713,6 @@ class _PasoEspecies extends StatelessWidget {
   }
 }
 
-// ─── Paso 4: Servicios ────────────────────────────────────────
 class _PasoServicios extends StatelessWidget {
   final PublicarFincaState state;
   const _PasoServicios({required this.state});
@@ -708,7 +780,6 @@ class _PasoServicios extends StatelessWidget {
   }
 }
 
-// ─── Paso 5: Normas ────────────────────────────────────────────
 class _PasoNormas extends StatefulWidget {
   final PublicarFincaState state;
   const _PasoNormas({required this.state});
@@ -772,7 +843,6 @@ class _PasoNormasState extends State<_PasoNormas> {
   }
 }
 
-// ─── Paso 6: Fotos ─────────────────────────────────────────────
 class _PasoFotos extends StatelessWidget {
   final PublicarFincaState state;
   const _PasoFotos({required this.state});
@@ -816,7 +886,7 @@ class _PasoFotos extends StatelessWidget {
             style: TextStyle(color: Colors.grey, fontSize: 14)),
         const SizedBox(height: 24),
 
-        // Grid of selected photos
+        
         if (state.fotos.isNotEmpty) ...[
           GridView.builder(
             shrinkWrap: true,
@@ -826,10 +896,10 @@ class _PasoFotos extends StatelessWidget {
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
             ),
-            itemCount: state.fotos.length + 1, // +1 for "add more" button
+            itemCount: state.fotos.length + 1, 
             itemBuilder: (context, i) {
               if (i == state.fotos.length) {
-                // "Add more" tile
+                
                 return GestureDetector(
                   onTap: () => _pickImages(context),
                   child: Container(
@@ -889,7 +959,7 @@ class _PasoFotos extends StatelessWidget {
           ),
           const SizedBox(height: 16),
         ] else ...[
-          // Empty state — tap to add
+          
           GestureDetector(
             onTap: () => _pickImages(context),
             child: Container(
@@ -952,7 +1022,6 @@ class _PasoFotos extends StatelessWidget {
   }
 }
 
-// ─── Shared widgets ────────────────────────────────────────────
 class _FieldLabel extends StatelessWidget {
   final String text;
   final bool required;

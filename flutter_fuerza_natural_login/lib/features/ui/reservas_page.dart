@@ -10,7 +10,7 @@ class ReservasPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // MisReservasBloc is provided by MainShell
+    
     return const _ReservasView();
   }
 }
@@ -30,7 +30,7 @@ class _ReservasView extends StatelessWidget {
               context.read<MisReservasBloc>().add(
                 const MisReservasLoadRequested(),
               );
-              // Espera a que el estado cambie de loading a otro
+              
               await Future.delayed(const Duration(milliseconds: 600));
             },
             child: CustomScrollView(
@@ -187,7 +187,6 @@ class _ReservasView extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
 class _StatBox extends StatelessWidget {
   final String value;
   final String label;
@@ -221,7 +220,6 @@ class _StatBox extends StatelessWidget {
   }
 }
 
-// ─── Reserva Card ─────────────────────────────────────────────
 class _ReservaCard extends StatefulWidget {
   final ReservaModel reserva;
   const _ReservaCard({super.key, required this.reserva});
@@ -340,13 +338,13 @@ class _ReservaCardState extends State<_ReservaCard> {
       ),
       child: Column(
         children: [
-          // Top row: image + info
+          
           Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image with status badge
+                
                 Stack(
                   children: [
                     ClipRRect(
@@ -584,7 +582,6 @@ class _ReservaCardState extends State<_ReservaCard> {
   }
 }
 
-// ─── Sheet: Dejar Reseña ──────────────────────────────────────
 class _DejarResenaSheet extends StatefulWidget {
   final String reservaId;
   final String fincaNombre;
@@ -689,7 +686,7 @@ class _DejarResenaSheetState extends State<_DejarResenaSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            // Estrellas
+            
             const Text(
               'Puntuación',
               style: TextStyle(
@@ -716,7 +713,7 @@ class _DejarResenaSheetState extends State<_DejarResenaSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            // Comentario
+            
             const Text(
               'Comentario (opcional)',
               style: TextStyle(

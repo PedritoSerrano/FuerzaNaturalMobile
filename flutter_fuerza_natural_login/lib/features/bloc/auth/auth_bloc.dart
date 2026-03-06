@@ -31,7 +31,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           debugPrint('[AuthBloc] getMe OK → ${user.email}');
           emit(AuthAuthenticated(user));
         } catch (e) {
-          // Token inválido o servidor no disponible → borrar token y pedir login
+          
           debugPrint('[AuthBloc] getMe FALLÓ → $e → limpiando token');
           await _repo.deleteToken();
           emit(const AuthUnauthenticated());

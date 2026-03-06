@@ -333,8 +333,6 @@ class _DetalleFincaPageState extends State<DetalleFincaPage>
   }
 }
 
-// ─── Reusable finca hero image ───────────────────────────────
-// ─── Carousel ────────────────────────────────────────────────
 class _FincaCarousel extends StatefulWidget {
   final List<String> imagenes;
   final Color color;
@@ -404,7 +402,7 @@ class _FincaCarouselState extends State<_FincaCarousel> {
             );
           },
         ),
-        // Dot indicators (only if more than 1 image)
+        
         if (widget.imagenes.length > 1)
           Positioned(
             bottom: 12,
@@ -454,7 +452,6 @@ class _FincaCarouselState extends State<_FincaCarousel> {
       );
 }
 
-// ─── Stat item ────────────────────────────────────────────────
 class _StatItem extends StatelessWidget {
   final String value;
   final String label;
@@ -474,7 +471,6 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-// ─── Info Tab ─────────────────────────────────────────────────
 class _InfoTab extends StatelessWidget {
   final FincaModel finca;
   const _InfoTab({required this.finca});
@@ -519,7 +515,6 @@ class _InfoTab extends StatelessWidget {
   }
 }
 
-// ─── Especies Tab ─────────────────────────────────────────────
 class _EspeciesTab extends StatelessWidget {
   final FincaModel finca;
   const _EspeciesTab({required this.finca});
@@ -564,7 +559,6 @@ class _EspeciesTab extends StatelessWidget {
   }
 }
 
-// ─── Servicios Tab ────────────────────────────────────────────
 class _ServiciosTab extends StatelessWidget {
   final FincaModel finca;
   const _ServiciosTab({required this.finca});
@@ -632,7 +626,6 @@ class _ServiciosTab extends StatelessWidget {
   }
 }
 
-// ─── Normas Tab ────────────────────────────────────────────────
 class _NormasTab extends StatelessWidget {
   final FincaModel finca;
   const _NormasTab({required this.finca});
@@ -669,7 +662,6 @@ class _NormasTab extends StatelessWidget {
   }
 }
 
-// ─── Mapa Tab ──────────────────────────────────────────────────
 class _MapaTab extends StatefulWidget {
   final FincaModel finca;
   const _MapaTab({required this.finca});
@@ -814,7 +806,7 @@ class _MapaTabState extends State<_MapaTab>
             ),
           ],
         ),
-        // Address chip at the bottom
+        
         Positioned(
           bottom: 12,
           left: 12,
@@ -853,7 +845,6 @@ class _MapaTabState extends State<_MapaTab>
   }
 }
 
-// ─── Booking bottom sheet ──────────────────────────────────────
 class _ReservaSheet extends StatefulWidget {
   final FincaModel finca;
   const _ReservaSheet({required this.finca});
@@ -864,7 +855,7 @@ class _ReservaSheet extends StatefulWidget {
 
 class _ReservaSheetState extends State<_ReservaSheet> {
   DateTime? _fecha;
-  String _tipo = 'rececho';   // monteria | rececho | visita
+  String _tipo = 'rececho';   
   int _personas = 1;
   bool _loading = false;
   String? _error;
@@ -942,7 +933,7 @@ class _ReservaSheetState extends State<_ReservaSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle
+          
           Center(
             child: Container(
               width: 40, height: 4,
@@ -963,7 +954,7 @@ class _ReservaSheetState extends State<_ReservaSheet> {
           ),
           const SizedBox(height: 20),
 
-          // ── Fecha ──
+          
           const Text('Fecha de la jornada',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
           const SizedBox(height: 8),
@@ -999,7 +990,7 @@ class _ReservaSheetState extends State<_ReservaSheet> {
           ),
           const SizedBox(height: 20),
 
-          // ── Tipo de jornada ──
+          
           const Text('Tipo de jornada',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
           const SizedBox(height: 8),
@@ -1046,7 +1037,7 @@ class _ReservaSheetState extends State<_ReservaSheet> {
           ),
           const SizedBox(height: 20),
 
-          // ── Personas ──
+          
           const Text('Número de personas',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
           const SizedBox(height: 8),
@@ -1072,7 +1063,7 @@ class _ReservaSheetState extends State<_ReservaSheet> {
             ],
           ),
 
-          // Error
+          
           if (_error != null) ...[
             const SizedBox(height: 10),
             Text(_error!,
@@ -1081,7 +1072,7 @@ class _ReservaSheetState extends State<_ReservaSheet> {
 
           const SizedBox(height: 20),
 
-          // ── Precio estimado ──
+          
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -1106,7 +1097,7 @@ class _ReservaSheetState extends State<_ReservaSheet> {
           ),
           const SizedBox(height: 16),
 
-          // ── Confirmar ──
+          
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -1154,8 +1145,6 @@ class _CounterBtn extends StatelessWidget {
     );
   }
 }
-
-// ── Reseñas tab ──────────────────────────────────────────────────────────────
 
 class _Resena {
   final int puntuacion;

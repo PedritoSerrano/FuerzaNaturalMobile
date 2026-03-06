@@ -10,7 +10,7 @@ import 'package:flutter_fuerza_natural_login/features/ui/main_shell.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // TEMPORAL: limpia token guardado para forzar login
+  
   await const FlutterSecureStorage().deleteAll();
   runApp(const FuerzaNaturalApp());
 }
@@ -30,14 +30,14 @@ class FuerzaNaturalApp extends StatelessWidget {
             seedColor: const Color(0xFF1e5a3a),
             primary: const Color(0xFF1e5a3a),
           ).copyWith(
-            // Override M3 auto-generated green-tinted neutrals to plain grey
+            
             outline: const Color(0xFFBDBDBD),
             outlineVariant: const Color(0xFFE0E0E0),
             surfaceContainerHighest: const Color(0xFFF0F0F0),
           ),
           useMaterial3: true,
           fontFamily: 'Roboto',
-          // Explicitly neutralise input borders so they don't inherit green
+          
           inputDecorationTheme: const InputDecorationTheme(
             border: OutlineInputBorder(
               borderSide: BorderSide(color: Color(0xFFE0E0E0)),
@@ -54,7 +54,6 @@ class FuerzaNaturalApp extends StatelessWidget {
   }
 }
 
-/// Listens to AuthBloc and decides whether to show LoginPage or MainShell.
 class _AppRouter extends StatefulWidget {
   const _AppRouter();
 
@@ -73,7 +72,7 @@ class _AppRouterState extends State<_AppRouter> {
       if (mounted && !_forcingLogout) {
         _forcingLogout = true;
         context.read<AuthBloc>().add(const AuthForceLogout());
-        // Reset flag tras unos ms para no bloquear futuros logouts
+        
         Future.delayed(const Duration(seconds: 2), () => _forcingLogout = false);
       }
     });
@@ -123,11 +122,10 @@ class _AppRouterState extends State<_AppRouter> {
             );
           }
 
-          // AuthUnauthenticated o AuthError → mostrar LoginPage
+          
           return const LoginPage();
         },
       ),
     );
   }
 }
-

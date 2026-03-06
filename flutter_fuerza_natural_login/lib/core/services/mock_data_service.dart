@@ -3,7 +3,7 @@ import 'package:flutter_fuerza_natural_login/core/models/reserva_model.dart';
 import 'package:flutter_fuerza_natural_login/core/models/user_model.dart';
 
 class MockDataService {
-  // ── Current logged-in user ─────────────────────────────────────────────────
+  
   static UserModel get currentUser => UserModel(
         id: 'u1',
         nombre: 'Carlos',
@@ -17,7 +17,7 @@ class MockDataService {
         rol: UserRole.cliente,
       );
 
-  // ── All available fincas ──────────────────────────────────────────────────
+  
   static List<FincaModel> get fincasDisponibles => [
         FincaModel(
           id: 'f1',
@@ -129,7 +129,7 @@ class MockDataService {
   static List<FincaModel> get fincasDestacadas =>
       fincasDisponibles.where((f) => f.destacada).toList();
 
-  // ── Owner's fincas ────────────────────────────────────────────────────────
+  
   static List<FincaModel> get misFincas => [
         FincaModel(
           id: 'mf1',
@@ -154,7 +154,7 @@ class MockDataService {
         ),
       ];
 
-  // ── User's reservations ───────────────────────────────────────────────────
+  
   static List<ReservaModel> get misReservas => [
         ReservaModel(
           id: 'r1',
@@ -226,7 +226,7 @@ class MockDataService {
         ),
       ];
 
-  // ── Spanish provinces ─────────────────────────────────────────────────────
+  
   static const List<String> provincias = [
     'Álava',
     'Albacete',

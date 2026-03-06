@@ -55,7 +55,7 @@ class _PerfilView extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F5F5),
       body: CustomScrollView(
         slivers: [
-          // Header
+          
           SliverToBoxAdapter(
             child: Container(
               color: const Color(0xFF1e5a3a),
@@ -91,7 +91,7 @@ class _PerfilView extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Profile card
+                
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -107,7 +107,7 @@ class _PerfilView extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      // Avatar + name
+                      
                       Row(
                         children: [
                           Stack(
@@ -161,7 +161,7 @@ class _PerfilView extends StatelessWidget {
                       const SizedBox(height: 16),
                       const Divider(height: 1),
                       const SizedBox(height: 12),
-                      // Contact info
+                      
                       _ContactRow(
                           icon: Icons.email_outlined,
                           text: user.email),
@@ -174,7 +174,7 @@ class _PerfilView extends StatelessWidget {
                             icon: Icons.location_on_outlined,
                             text: user.ubicacion!),
                       const SizedBox(height: 12),
-                      // Stats
+                      
                       Row(
                         children: [
                           Expanded(
@@ -198,7 +198,7 @@ class _PerfilView extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Mi Cuenta section
+                
                 _SectionHeader(title: 'Mi Cuenta'),
                 const SizedBox(height: 8),
                 _MenuCard(items: [
@@ -222,7 +222,7 @@ class _PerfilView extends StatelessWidget {
                 ]),
                 const SizedBox(height: 20),
 
-                // Mi Finca section
+                
                 _SectionHeader(title: 'Mi Finca'),
                 const SizedBox(height: 8),
                 _MenuCard(items: [
@@ -241,7 +241,7 @@ class _PerfilView extends StatelessWidget {
                 ]),
                 const SizedBox(height: 24),
 
-                // Cerrar sesión
+                
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
@@ -299,7 +299,6 @@ class _PerfilView extends StatelessWidget {
   }
 }
 
-// ─── Helper widgets ────────────────────────────────────────────
 class _ContactRow extends StatelessWidget {
   final IconData icon;
   final String text;
@@ -459,7 +458,6 @@ class _MenuItem {
       required this.onTap});
 }
 
-// ─── Editar Perfil sheet ───────────────────────────────────────
 class _EditarPerfilSheet extends StatefulWidget {
   final UserModel user;
   const _EditarPerfilSheet({required this.user});

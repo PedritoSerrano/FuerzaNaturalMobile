@@ -59,7 +59,7 @@ class ReservaModel {
 
   String get ubicacion => '$fincaProvincia, $fincaPais';
 
-  // ── Parsing helpers ──────────────────────────────────────────────────────
+  
   static double _d(dynamic v) =>
       (num.tryParse(v?.toString() ?? '') ?? 0).toDouble();
 
@@ -103,11 +103,11 @@ class ReservaModel {
   }
 
   factory ReservaModel.fromJson(Map<String, dynamic> json) {
-    // Backend: reserva → evento → finca (nested via eager loading)
+    
     final evento = json['evento'] as Map<String, dynamic>?;
     final fincaMap = evento?['finca'] as Map<String, dynamic>?;
 
-    // Finca images: backend stores array in 'imagenes'
+    
     String? _fincaImage(Map<String, dynamic>? f) {
       if (f == null) return null;
       final imgs = f['imagenes'];
@@ -116,7 +116,7 @@ class ReservaModel {
       return f['imageUrl']?.toString() ?? f['image_url']?.toString();
     }
 
-    // Parse provincia from 'ubicacion' field (e.g., "Sevilla, España")
+    
     String _provFromUbicacion(Map<String, dynamic>? f) {
       if (f == null) return '';
       final prov = f['provincia']?.toString() ?? '';
@@ -127,23 +127,23 @@ class ReservaModel {
 
     return ReservaModel(
       id: json['id']?.toString() ?? '0',
-      // Backend uses 'id_usuario'
+      
       clienteId: (json['id_usuario'] ?? json['clienteId'] ?? json['cliente_id'] ?? json['user_id'] ?? '0').toString(),
       clienteNombre: (json['clienteNombre'] ?? json['cliente_nombre'] ?? json['user_name'] ?? '').toString(),
-      // Finca data comes through nested evento → finca
+      
       fincaId: (fincaMap?['id'] ?? evento?['id_finca'] ?? json['fincaId'] ?? json['finca_id'] ?? '0').toString(),
       fincaNombre: (fincaMap?['nombre'] ?? json['fincaNombre'] ?? json['finca_nombre'] ?? json['finca']?['nombre'] ?? '').toString(),
       fincaProvincia: _provFromUbicacion(fincaMap),
       fincaPais: (fincaMap?['pais'] ?? '').toString(),
       fincaImageUrl: _fincaImage(fincaMap) ?? json['fincaImageUrl']?.toString() ?? json['finca_image_url']?.toString(),
-      // Dates come from evento
+      
       fechaInicio: _dt(evento?['fecha_inicio'] ?? json['fechaInicio'] ?? json['fecha_inicio']),
       fechaFin: _dt(evento?['fecha_fin'] ?? json['fechaFin'] ?? json['fecha_fin']),
       numeroDias: _i(json['numeroDias'] ?? json['numero_dias']),
       numeroPersonas: _i(json['numero_personas'] ?? json['numeroPersonas'] ?? json['numero_personas']) == 0
           ? 1
           : _i(json['numero_personas'] ?? json['numeroPersonas']),
-      // Price from evento
+      
       precioTotal: _d(evento?['precio'] ?? json['precioTotal'] ?? json['precio_total']),
       descuento: json['descuento'] != null ? _d(json['descuento']) : null,
       estado: _parseEstado(json['estado']),

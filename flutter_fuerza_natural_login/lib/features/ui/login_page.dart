@@ -44,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo
+                
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -69,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 40),
 
-                // Card del formulario
+                
                 Container(
                   constraints: const BoxConstraints(maxWidth: 400),
                   padding: const EdgeInsets.all(32),
@@ -112,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(height: 32),
 
-                            // Email
+                            
                             const Text(
                               'Email',
                               style: TextStyle(
@@ -160,7 +160,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(height: 20),
 
-                            // Contraseña
+                            
                             const Text(
                               'Contraseña',
                               style: TextStyle(
@@ -220,7 +220,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(height: 16),
 
-                            // Recordarme + ¿Olvidaste contraseña?
+                            
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -239,7 +239,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(height: 24),
 
-                            // Botón Iniciar Sesión
+                            
                             ElevatedButton(
                               onPressed: isLoading ? null : _submit,
                               style: ElevatedButton.styleFrom(
@@ -287,7 +287,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             const SizedBox(height: 24),
 
-                            // Divider — o — Divider
+                            
                             Row(
                               children: [
                                 Expanded(
@@ -315,7 +315,7 @@ class _LoginPageState extends State<LoginPage> {
                               ],
                             ),
                             const SizedBox(height: 24),
-                            // ¿No tienes cuenta?
+                            
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [

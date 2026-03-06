@@ -40,23 +40,23 @@ class UserModel {
   String get nombreCompleto => apellidos != null ? '$nombre $apellidos' : nombre;
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    // id puede ser int o String según el backend
+    
     final rawId = json['id'];
     final id = rawId?.toString() ?? '0';
 
-    // nombre: campo propio del proyecto o 'name' estándar de Laravel
+    
     final nombre = (json['nombre'] ?? json['name'] ?? 'Usuario') as String;
 
-    // fecha de registro: campo propio o 'created_at' de Laravel
+    
     final fechaRaw = json['fechaRegistro'] ?? json['created_at'];
     final fechaRegistro = fechaRaw != null
         ? DateTime.tryParse(fechaRaw as String) ?? DateTime.now()
         : DateTime.now();
 
-    // último acceso: campo propio o 'updated_at'
+    
     final ultimoRaw = json['ultimoAcceso'] ?? json['updated_at'];
 
-    // rol: soporta 'admin', 'cliente', 'propietario'
+    
     final rolStr = (json['rol'] ?? json['role'] ?? 'cliente') as String;
 
     return UserModel(
